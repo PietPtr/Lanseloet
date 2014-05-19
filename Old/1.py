@@ -6,6 +6,12 @@ def distance(speed, time):
     distance = time * speed
     return distance
 
+def keyDownRemove(item):
+    global keyDown
+    for key in keyDown:
+        if key == item:
+            keyDown.remove(key)
+
 # --- Classes ---
 
 # --- Set up ---
@@ -24,6 +30,8 @@ showDebug = True
 loopTrack = 0
 
 playerPos = [0, 0]
+
+keyDown = []
 
 lastPress = 0
 
@@ -45,6 +53,8 @@ for picture in directionList:
     directionList[picScaleTrack] = pygame.transform.scale(picture, (64, 64))
     picScaleTrack += 1
 
+print directionList[0]
+
 player = directionList[0]
 
 # --- Main loop ---
@@ -57,35 +67,39 @@ while True:
     loopTrack = loopTrack + 1
 
     # --- first blit/fill --- 
-    windowSurface.fill(WHITE)
+    windowSurface.fill(GREEN)
     
     windowSurface.blit(player, (playerPos[0] * 64, playerPos[1] * 64))
 
-    # --- Movement ---
-    if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 30:
+    # --- movement ---
+    if 119 in keyDown and pygame.time.get_ticks() - lastPress >= 100:
         player = directionList[0]
         playerPos[1] -= 1
-    elif pygame.key.get_pressed()[97] and pygame.time.get_ticks() - lastPress >= 30:
+        keyDownRemove(119)
+    elif 97 in keyDown and pygame.time.get_ticks() - lastPress >= 100:
         player = directionList[1]
         playerPos[0] -= 1
-    elif pygame.key.get_pressed()[115] and pygame.time.get_ticks() - lastPress >= 30:
+        keyDownRemove(97)
+    elif 115 in keyDown and pygame.time.get_ticks() - lastPress >= 100:
         player = directionList[2]
         playerPos[1] += 1
-    elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 30:
+        keyDownRemove(115)
+    elif 100 in keyDown and pygame.time.get_ticks() - lastPress >= 100:
         player = directionList[3]
         playerPos[0] += 1
-    if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 30:
+        keyDownRemove(100)
+    if True in pygame.key.get_pressed() and pygame.time.get_ticks() - lastPress >= 100:
         lastPress = pygame.time.get_ticks()
 
     # --- Tile visualisation ---
     for i in range(0, 12):
         for j in range(0, 19):
-            #pygame.draw.rect(windowSurface, BLUE, (i * 64, j * 64, i * 64, j * 64), 1)
+            #pygame.draw.rect(windowSurface, BLUE, (j * 64, i * 64 + 64, j * 64, i * 64 + 64), 1)
             pass
-        
+    
     # --- Debug ---
     if showDebug == True:
-        debug = "string"
+        debug = playerPos
         debugText = basicFont.render(str(debug), True, YELLOW) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
@@ -95,6 +109,10 @@ while True:
         if event.type == KEYUP:
             if event.key == 284:
                 showDebug = not showDebug
+        elif event.type == KEYDOWN:
+            if event.key not in keyDown:
+                keyDown.append(event.key)
+                print keyDown
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
