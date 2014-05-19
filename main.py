@@ -65,7 +65,8 @@ while True:
     # --- Tile visualisation ---
     for i in range(0, 12):
         for j in range(0, 19):
-            pygame.draw.rect(windowSurface, BLUE, (i * 64, j * 64, i * 64, j * 64), 1)
+            #pygame.draw.rect(windowSurface, BLUE, (i * 64, j * 64, i * 64, j * 64), 1)
+            pass
     
     # --- Debug ---
     if showDebug == True:
