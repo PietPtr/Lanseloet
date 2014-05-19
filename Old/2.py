@@ -14,7 +14,6 @@ class Character(object):
         self.sprite = sprite
         self.nextPosition = self.position
     def move(self, direction):
-        self.direction = direction
         if self.direction == 0:
             self.nextPosition[1] = self.nextPosition[1] - 64
         elif self.direction == 1:
@@ -24,18 +23,7 @@ class Character(object):
         elif self.direction == 3:
             self.nextPosition[0] = self.nextPosition[0] + 64
     def updateAnimation(self):
-        if self.position[0] != self.nextPosition[0]:
-            if self.position[0] < self.nextPosition[0]:
-                self.position[0] += distance(1, frameTime)
-            elif self.position[0] > self.nextPosition[0]:
-                self.position[0] -= distance(1, frameTime)
-        if self.position[1] != self.nextPosition[1]:
-            if self.position[1] < self.nextPosition[1]:
-                self.position[1] += distance(1, frameTime)
-            elif self.position[1] > self.nextPosition[1]:
-                self.position[1] -= distance(1, frameTime)
-    def update(self):
-        windowSurface.blit(self.sprite[self.direction], (self.position[0], self.position[1]))
+        
 
 # --- Set up ---
 pygame.init()
@@ -65,6 +53,8 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
+# --- Objects ---
+
 # --- Image & music Loading --- 
 directionList = [pygame.image.load('up.png'),
                  pygame.image.load('left.png'),
@@ -88,9 +78,6 @@ player = directionList[5]
 
 tile = pygame.image.load('tile.png')
 
-# --- Objects ---
-playerChar = Character([0, 0], 0, directionList)
-
 # --- Main loop ---
 while True:
     # --- Variables outside gamestate ---
@@ -102,21 +89,37 @@ while True:
 
     # --- first blit/fill --- 
     windowSurface.fill(WHITE)
-
-    playerChar.updateAnimation()
-    playerChar.update()
+    
+    windowSurface.blit(player, (playerPos[0], playerPos[1]))
 
     # --- Movement ---
     if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
-        playerChar.move(0)
+        player = directionList[0]
+        nextPlayerPos[1] -= 64
     elif pygame.key.get_pressed()[97] and pygame.time.get_ticks() - lastPress >= 100:
-        playerChar.move(1)
+        player = directionList[1]
+        nextPlayerPos[0] -= 64
     elif pygame.key.get_pressed()[115] and pygame.time.get_ticks() - lastPress >= 100:
-        playerChar.move(2)
+        player = directionList[2]
+        nextPlayerPos[1] += 64
     elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 100:
-        playerChar.move(3)
+        player = directionList[3]
+        nextPlayerPos[0] += 64
     if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 100:
-        lastPress = pygame.time.get_ticks() 
+        lastPress = pygame.time.get_ticks()
+
+    # --- Animation ---
+    if playerPos[0] != nextPlayerPos[0]:
+        if playerPos[0] < nextPlayerPos[0]:
+            playerPos[0] += distance(1, frameTime)
+        elif playerPos[0] > nextPlayerPos[0]:
+            playerPos[0] -= distance(1, frameTime)
+    if playerPos[1] != nextPlayerPos[1]:
+        if playerPos[1] < nextPlayerPos[1]:
+            playerPos[1] += distance(1, frameTime)
+        elif playerPos[1] > nextPlayerPos[1]:
+            playerPos[1] -= distance(1, frameTime)
+            
 
     # --- Tile visualisation ---
     for y in range(-1, 12):
@@ -126,7 +129,7 @@ while True:
         
     # --- Debug ---
     if showDebug == True:
-        debug = playerChar.nextPosition, playerChar.position
+        debug = nextPlayerPos
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
