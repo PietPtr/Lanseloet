@@ -16,7 +16,7 @@ Read maps from textFile
         warp,12,0,chamber0,2     | Warp at x: 12, y:0 to warp 1 in chamber0 map. If player stands on the warp it will be teleported to the warp ID in the room
 
 """
-import pygame, sys, os
+import pygame, sys, os, pickle
 from pygame.locals import *
 
 # --- Functions ---
@@ -27,6 +27,31 @@ def distance(speed, time):
 def changeGameState(newState):
     global GameState
     GameState = newState
+
+def saveAll():
+    global playerPos
+    global showDebug
+    global nextPlayerPos
+    global saveState
+    saveState = [[playerChar.position[0], playerChar.position[1], 0], [], [], [], showDebug]
+    try:
+        pickle.dump(saveState, open("sav.sav", "wb"))
+        return True
+    except:
+        return False
+
+def loadAll():
+    global saveState
+    try:
+        saveState = pickle.load(open("sav.sav", "rb"))
+    except IOError:
+        saveState = [[3 * 64, 1 * 64, 0], [], [], [], True]
+        pickle.dump(saveState, open("sav.sav", "wb"))
+
+def quitGame():
+    saveAll()
+    pygame.quit()
+    sys.exit()
 
 # --- Classes ---
 class Character(object):
@@ -116,17 +141,22 @@ basicFont = pygame.font.SysFont("palatinolinotype", 23)
 mainClock = pygame.time.Clock()
 
 # --- Other variables ---
-showDebug = True
+
+#saveState = [[3, 1, 0], [], [], [], True] #position [x, y, map] | Boosts | sounds played | options | debug
+saveState = None
+loadAll()
+
+showDebug = saveState[4]
+
+playerPos = [saveState[0][0], saveState[0][1]]
+nextPlayerPos = [saveState[0][0], saveState[0][1]]
 
 loopTrack = 0
-
-playerPos = [0, 0]
-nextPlayerPos = [0, 0]
-
 lastPress = 0
 
 clicked = False
 screenshot = False
+
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -169,10 +199,15 @@ tile = pygame.image.load('tile.png')
 
 menuBg = pygame.image.load('background.png')
 
+chamber0 = pygame.image.load('chamber0.png')
+
 # --- Objects ---
-playerChar = Character([0, 0], 0, directionList)
+playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList)
 
 B_start = Button([64, 64], "RESUME", lambda:changeGameState(SEARCHPLAY))
+B_new = Button([64, 165], "NEW GAME", "")
+B_options = Button([64, 266], "OPTIONS", "")
+B_quit = Button([64, 367], "QUIT", lambda:quitGame())
 
 # --- Main loop ---
 while True:
@@ -195,6 +230,7 @@ while True:
             if event.button == 1:
                 clicked = True
         if event.type == QUIT:
+            saveAll()
             pygame.quit()
             sys.exit()
             
@@ -202,12 +238,16 @@ while True:
     if GameState == MENU:
         windowSurface.blit(menuBg, (0, 0))
         B_start.doTasks()
+        B_new.doTasks()
+        B_options.doTasks()
+        B_quit.doTasks()
         
     if GameState == PAUSE:
         pass
     if GameState == SEARCHPLAY:
-        # --- first blit/fill --- 
-        windowSurface.fill(GREEN)
+        # --- first blit/fill ---
+        windowSurface.fill(BLACK)
+        windowSurface.blit(chamber0, (0, 0))
 
         playerChar.updateAnimation()
         playerChar.update()
@@ -227,9 +267,8 @@ while True:
         # --- Tile visualisation ---
         for y in range(-1, 12):
             for x in range(-1, 19):
-                windowSurface.blit(tile, (x * 64, y * 64))
-            
-        
+                #windowSurface.blit(tile, (x * 64, y * 64))
+                pass
     # --- Debug ---
     if showDebug == True:
         debug = True
