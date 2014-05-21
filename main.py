@@ -19,14 +19,12 @@ Read maps from textFile
 import pygame, sys, os, pickle
 from pygame.locals import *
 
+defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True]
+
 # --- Functions ---
 def distance(speed, time):
     distance = time * speed
     return distance
-
-def changeGameState(newState):
-    global GameState
-    GameState = newState
 
 def saveAll():
     global playerPos
@@ -45,13 +43,37 @@ def loadAll():
     try:
         saveState = pickle.load(open("sav.sav", "rb"))
     except IOError:
-        saveState = [[3 * 64, 1 * 64, 0], [], [], [], True]
+        saveState = defaultSaveState
         pickle.dump(saveState, open("sav.sav", "wb"))
+
+def resetSaveState():
+    global saveState, playerChar
+    loadAll()
+
+    saveState = defaultSaveState
+
+    showDebug = saveState[4]
+    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList)
+
+"""Button functions"""
+def newGame():
+    newGame = True
+    return newGame
 
 def quitGame():
     saveAll()
     pygame.quit()
     sys.exit()
+    
+def changeGameState(newState):
+    global GameState
+    GameState = newState
+
+def yes():
+    return True
+
+def no():
+    return False
 
 # --- Classes ---
 class Character(object):
@@ -136,9 +158,11 @@ pygame.init()
 windowSurface = pygame.display.set_mode((1216, 768), 0, 32) #always 0 and 32
 pygame.display.set_caption('Lanceloet van Denemerken')
 
-basicFont = pygame.font.SysFont("palatinolinotype", 23)
-
 mainClock = pygame.time.Clock()
+
+"""Fonts"""
+basicFont = pygame.font.SysFont("palatinolinotype", 23)
+bigFont = pygame.font.SysFont("palatinolinotype", 51)
 
 # --- Other variables ---
 
@@ -172,6 +196,7 @@ CUTSCENE = 1
 SEARCHPLAY = 2
 RUNPLAY = 3
 PAUSE = 4
+NEWGAME = 5
 GameState = 0
 
 # --- Image & music Loading --- 
@@ -201,13 +226,21 @@ menuBg = pygame.image.load('background.png')
 
 chamber0 = pygame.image.load('chamber0.png')
 
+"""Overlay"""
+blackFader = pygame.Surface((1216, 768))
+blackFader.fill((0, 0, 0))
+blackFader.set_alpha(1)
+
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList)
 
 B_start = Button([64, 64], "RESUME", lambda:changeGameState(SEARCHPLAY))
-B_new = Button([64, 165], "NEW GAME", "")
+B_new = Button([64, 165], "NEW GAME", lambda:changeGameState(NEWGAME))
 B_options = Button([64, 266], "OPTIONS", "")
 B_quit = Button([64, 367], "QUIT", lambda:quitGame())
+
+B_yes = Button([608 - 204, 367], "YES", lambda:yes())
+B_no = Button([608 + 5, 367], "NO", lambda:no())
 
 # --- Main loop ---
 while True:
@@ -237,13 +270,31 @@ while True:
     # ----- Gamestates -----
     if GameState == MENU:
         windowSurface.blit(menuBg, (0, 0))
-        B_start.doTasks()
+        if saveState != defaultSaveState:
+            B_start.doTasks()
         B_new.doTasks()
         B_options.doTasks()
         B_quit.doTasks()
-        
+    
+    if GameState == NEWGAME:
+        windowSurface.blit(menuBg, (0, 0))
+        if saveState != defaultSaveState:
+            warningBig = bigFont.render("WARNING!", True, RED)
+            warningSmall = basicFont.render("Passet di op! Alsdu een niewe spel beghint, en wert alde spel nie bewaert. Bisdu seeker?", True, RED)
+            windowSurface.blit(warningBig, (608 - (warningBig.get_size()[0] / 2), 100))
+            windowSurface.blit(warningSmall, (608 - (warningSmall.get_size()[0] / 2), 200))
+            if B_yes.doTasks() == True:
+                os.remove("sav.sav")
+                resetSaveState()
+                GameState = SEARCHPLAY
+            elif B_no.doTasks() == True:
+                GameState = MENU
+        elif saveState == defaultSaveState:
+            saveState = defaultSaveState
+            GameState = SEARCHPLAY
+    
     if GameState == PAUSE:
-        pass
+        print "pause"
     if GameState == SEARCHPLAY:
         # --- first blit/fill ---
         windowSurface.fill(BLACK)
@@ -262,7 +313,7 @@ while True:
         elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 100:
             playerChar.move(3)
         if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 100:
-            lastPress = pygame.time.get_ticks() 
+            lastPress = pygame.time.get_ticks()
 
         # --- Tile visualisation ---
         for y in range(-1, 12):
@@ -271,7 +322,7 @@ while True:
                 pass
     # --- Debug ---
     if showDebug == True:
-        debug = True
+        debug = mousePosition
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
