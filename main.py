@@ -9,11 +9,11 @@ Create script interpreter
         - walk <dir> <amount>    |
         - playsound <soundname>  |
         - say <text>             | subtitles?
-Read maps from textFile
+Read Chambers from textFile
 - should be able to read warps to/from coordinates.
     - Example:
         chamber1.png
-        warp,12,0,chamber0,2     | Warp at x: 12, y:0 to warp 1 in chamber0 map. If player stands on the warp it will be teleported to the warp ID in the room
+        warp,12,0,chamber0,2     | Warp at x: 12, y:0 to warp 1 in chamber0 Chamber. If player stands on the warp it will be teleported to the warp ID in the room
 
 """
 import pygame, sys, os, pickle
@@ -26,6 +26,30 @@ def distance(speed, time):
     distance = time * speed
     return distance
 
+"""font"""
+def loadFont():
+    global alphabetPictures
+    path = os.path.abspath("font")
+    for picture in os.listdir(path):
+        alphabetPictures.append(pygame.image.load("font/" + picture))
+    print alphabetPictures
+
+def text(text, coords):
+    global alphabetPictures
+    
+    outputList = []
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", ",", "."]
+    index = 0
+    for letter in text:
+        outputList.append(alphabet.index(text[index]))
+        index += 1
+
+    textLength = 0       
+    for index in outputList:
+        windowSurface.blit(alphabetPictures[outputList[index]], (coords[0] + textLength, coords[1]))
+        textLength = textLength + int(alphabetPictures[outputList[index]].get_size()[0])
+
+"""saveState"""
 def saveAll():
     global playerPos
     global showDebug
@@ -53,7 +77,11 @@ def resetSaveState():
     saveState = defaultSaveState
 
     showDebug = saveState[4]
-    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList)
+    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, ChamberList[0])
+
+"""Scripts/Chambers loading"""
+#def loadScripts():
+    
 
 """Button functions"""
 def newGame():
@@ -76,23 +104,46 @@ def no():
     return False
 
 # --- Classes ---
+class Chamber(object):
+    def __init__(self, mapPicture, warps, events, wallList):
+        self.mapPicture = mapPicture
+        self.warps = warps    #list of lists: [[pos1, pos2], warpto]
+        self.events = events  #list of character objects
+        self.wallList = wallList    #list of coordinates
+        self.i = 0
+        for coordList in self.wallList:
+            coordList = [coordList[0] * 64, coordList[1] * 64]
+            self.wallList[self.i] = coordList
+            self.i += 1
+        print self.wallList
+
+    def render(self):
+        windowSurface.blit(self.mapPicture, (0, 0))
+        #for event in events: blit in right pos (event is a character class)
+    def walls(self, position):  #To check if a player collides with a wall
+        if position in self.wallList:
+            return True
+        else:
+            return False
+
 class Character(object):
-    def __init__(self, position, direction, spriteList):
+    def __init__(self, position, direction, spriteList, currentChamber):
         self.position = position
         self.direction = direction
         self.spriteList = spriteList
+        self.currentChamber = currentChamber
         self.nextPosition = [self.position[0], self.position[1]]
         self.animationRunning = False
     def move(self, direction):
         self.direction = direction
         if self.animationRunning == False:
-            if self.direction == 0:
+            if self.direction == 0 and self.currentChamber.walls([self.nextPosition[1] - 64, self.nextPosition[0]]) == False:
                 self.nextPosition[1] = self.nextPosition[1] - 64
-            elif self.direction == 1:
+            elif self.direction == 1 and self.currentChamber.walls([self.nextPosition[1], self.nextPosition[0] - 64]) == False:
                 self.nextPosition[0] = self.nextPosition[0] - 64
-            elif self.direction == 2:
+            elif self.direction == 2 and self.currentChamber.walls([self.nextPosition[1] + 64, self.nextPosition[0]]) == False:
                 self.nextPosition[1] = self.nextPosition[1] + 64
-            elif self.direction == 3:
+            elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[1], self.nextPosition[0] + 64]) == False:
                 self.nextPosition[0] = self.nextPosition[0] + 64
     def updateAnimation(self):
         if self.position[0] != self.nextPosition[0]:
@@ -127,7 +178,7 @@ class Button(object):
         self.position = position
         self.text = text
         self.function = function
-        self.image = [pygame.image.load('button.png'), pygame.image.load('buttonH.png')]
+        self.image = [pygame.image.load('resources/button.png'), pygame.image.load('resources/buttonH.png')]
         self.hovering = False
     def doTasks(self):
         global clicked
@@ -151,7 +202,7 @@ class Button(object):
             return True
         else:
             return False
-    
+
 # --- Set up ---
 pygame.init()
 
@@ -163,10 +214,12 @@ mainClock = pygame.time.Clock()
 """Fonts"""
 basicFont = pygame.font.SysFont("palatinolinotype", 23)
 bigFont = pygame.font.SysFont("palatinolinotype", 51)
+alphabetPictures = []
+loadFont()
 
 # --- Other variables ---
 
-#saveState = [[3, 1, 0], [], [], [], True] #position [x, y, map] | Boosts | sounds played | options | debug
+#saveState = [[3, 1, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 saveState = None
 loadAll()
 
@@ -181,6 +234,15 @@ lastPress = 0
 clicked = False
 screenshot = False
 
+escape = False
+
+letterSizeList = []
+for picture in alphabetPictures:
+    letterSizeList.append(picture.get_size()[0])
+
+print letterSizeList
+
+ChamberList = [Chamber(pygame.image.load('resources/chamber0.png'), [3, 1], [], [[3, 0], [4, 0]])]
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -200,18 +262,18 @@ NEWGAME = 5
 GameState = 0
 
 # --- Image & music Loading --- 
-directionList = [pygame.image.load('up.png'),
-                 pygame.image.load('left.png'),
-                 pygame.image.load('down.png'),
-                 pygame.image.load('right.png'),
-                 pygame.image.load('upl.png'),
-                 pygame.image.load('leftl.png'),
-                 pygame.image.load('downl.png'),
-                 pygame.image.load('rightl.png'),
-                 pygame.image.load('upr.png'),
-                 pygame.image.load('leftr.png'),
-                 pygame.image.load('downr.png'),
-                 pygame.image.load('rightr.png')] 
+directionList = [pygame.image.load('resources/up.png'),
+                 pygame.image.load('resources/left.png'),
+                 pygame.image.load('resources/down.png'),
+                 pygame.image.load('resources/right.png'),
+                 pygame.image.load('resources/upl.png'),
+                 pygame.image.load('resources/leftl.png'),
+                 pygame.image.load('resources/downl.png'),
+                 pygame.image.load('resources/rightl.png'),
+                 pygame.image.load('resources/upr.png'),
+                 pygame.image.load('resources/leftr.png'),
+                 pygame.image.load('resources/downr.png'),
+                 pygame.image.load('resources/rightr.png')] 
 
 picScaleTrack = 0
 for picture in directionList:
@@ -220,27 +282,25 @@ for picture in directionList:
 
 player = directionList[5]
 
-tile = pygame.image.load('tile.png')
+tile = pygame.image.load('resources/tile.png')
 
-menuBg = pygame.image.load('background.png')
+menuBg = pygame.image.load('resources/background.png')
+pauseBg = pygame.image.load('resources/pause.png')
 
-chamber0 = pygame.image.load('chamber0.png')
-
-"""Overlay"""
-blackFader = pygame.Surface((1216, 768))
-blackFader.fill((0, 0, 0))
-blackFader.set_alpha(1)
+chamber0 = pygame.image.load('resources/chamber0.png')
 
 # --- Objects ---
-playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList)
+playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, ChamberList[0])
 
 B_start = Button([64, 64], "RESUME", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([64, 165], "NEW GAME", lambda:changeGameState(NEWGAME))
-B_options = Button([64, 266], "OPTIONS", "")
+B_options = Button([64, 266], "OPTIONS", lambda:yes())
 B_quit = Button([64, 367], "QUIT", lambda:quitGame())
 
 B_yes = Button([608 - 204, 367], "YES", lambda:yes())
 B_no = Button([608 + 5, 367], "NO", lambda:no())
+
+B_continue = Button([64, 266], "CONTINUE", lambda:changeGameState(SEARCHPLAY))
 
 # --- Main loop ---
 while True:
@@ -259,6 +319,8 @@ while True:
                 showDebug = not showDebug
             elif event.key == 283:
                 screenshot = True
+            elif event.key == 27:
+                escape = True
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 clicked = True
@@ -275,6 +337,8 @@ while True:
         B_new.doTasks()
         B_options.doTasks()
         B_quit.doTasks()
+
+        text("QWERTYUIOPASDFGHJKLZXCVBNM", [10, 500])
     
     if GameState == NEWGAME:
         windowSurface.blit(menuBg, (0, 0))
@@ -294,11 +358,13 @@ while True:
             GameState = SEARCHPLAY
     
     if GameState == PAUSE:
-        print "pause"
+        windowSurface.blit(pauseBg, (0, 0))
+        B_continue.doTasks()
+        B_quit.doTasks()
     if GameState == SEARCHPLAY:
         # --- first blit/fill ---
         windowSurface.fill(BLACK)
-        windowSurface.blit(chamber0, (0, 0))
+        playerChar.currentChamber.render()
 
         playerChar.updateAnimation()
         playerChar.update()
@@ -320,15 +386,24 @@ while True:
             for x in range(-1, 19):
                 #windowSurface.blit(tile, (x * 64, y * 64))
                 pass
+
+        # --- Pause ---
+        if escape:
+            GameState = PAUSE
+            escape = False
+            
     # --- Debug ---
     if showDebug == True:
-        debug = mousePosition
+        debug = playerChar.nextPosition
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
     # --- Run outside GameState system ---
     """"Reset variables"""
     clicked = False
+
+    if GameState != SEARCHPLAY:
+        escape = False
 
     """Screenshot"""
     if screenshot == True:
