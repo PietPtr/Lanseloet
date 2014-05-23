@@ -16,7 +16,7 @@ Read Chambers from textFile
         warp,12,0,chamber0,2     | Warp at x: 12, y:0 to warp 1 in chamber0 Chamber. If player stands on the warp it will be teleported to the warp ID in the room
 
 """
-import pygame, sys, os, pickle
+import pygame, sys, os, pickle, csv
 from pygame.locals import *
 
 defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True]
@@ -32,7 +32,6 @@ def loadFont():
     path = os.path.abspath("font")
     for picture in os.listdir(path):
         alphabetPictures.append(pygame.image.load("font/" + picture))
-    print alphabetPictures
 
 def text(text, coords):
     global alphabetPictures
@@ -77,7 +76,7 @@ def resetSaveState():
     saveState = defaultSaveState
 
     showDebug = saveState[4]
-    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, ChamberList[0])
+    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
 
 """Scripts/Chambers loading"""
 #def loadScripts():
@@ -111,11 +110,11 @@ class Chamber(object):
         self.events = events  #list of character objects
         self.wallList = wallList    #list of coordinates
         self.i = 0
+        
         for coordList in self.wallList:
             coordList = [coordList[0] * 64, coordList[1] * 64]
             self.wallList[self.i] = coordList
             self.i += 1
-        print self.wallList
 
     def render(self):
         windowSurface.blit(self.mapPicture, (0, 0))
@@ -137,13 +136,13 @@ class Character(object):
     def move(self, direction):
         self.direction = direction
         if self.animationRunning == False:
-            if self.direction == 0 and self.currentChamber.walls([self.nextPosition[1] - 64, self.nextPosition[0]]) == False:
+            if self.direction == 0 and self.currentChamber.walls([self.nextPosition[0], self.nextPosition[1] - 64]) == False:
                 self.nextPosition[1] = self.nextPosition[1] - 64
-            elif self.direction == 1 and self.currentChamber.walls([self.nextPosition[1], self.nextPosition[0] - 64]) == False:
+            elif self.direction == 1 and self.currentChamber.walls([self.nextPosition[0] - 64, self.nextPosition[1]]) == False:
                 self.nextPosition[0] = self.nextPosition[0] - 64
-            elif self.direction == 2 and self.currentChamber.walls([self.nextPosition[1] + 64, self.nextPosition[0]]) == False:
+            elif self.direction == 2 and self.currentChamber.walls([self.nextPosition[0], self.nextPosition[1] + 64]) == False:
                 self.nextPosition[1] = self.nextPosition[1] + 64
-            elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[1], self.nextPosition[0] + 64]) == False:
+            elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[0] + 64, self.nextPosition[1]]) == False:
                 self.nextPosition[0] = self.nextPosition[0] + 64
     def updateAnimation(self):
         if self.position[0] != self.nextPosition[0]:
@@ -240,9 +239,24 @@ letterSizeList = []
 for picture in alphabetPictures:
     letterSizeList.append(picture.get_size()[0])
 
-print letterSizeList
+chamberList = []
 
-ChamberList = [Chamber(pygame.image.load('resources/chamber0.png'), [3, 1], [], [[3, 0], [4, 0]])]
+path = os.path.abspath("scripts")
+for script in os.listdir(path):
+    with open('scripts/' + script, 'rb') as csvscript:
+        scriptReader = csv.reader(csvscript, delimiter=' ', quotechar='"')
+        scriptList = []
+        for command in scriptReader:
+            scriptList.append(command)
+        mapWalls = []
+        for command in scriptList:
+            comArgs = command[0].split('|')
+            if comArgs[0].startswith("pic"):
+                mapImage = pygame.image.load('resources/' + comArgs[1])
+            elif comArgs[0].startswith("wall"):
+                mapWalls.append([int(comArgs[1]), int(comArgs[2])])
+            #elif event
+        chamberList.append(Chamber(mapImage, [], [], mapWalls))
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -290,7 +304,7 @@ pauseBg = pygame.image.load('resources/pause.png')
 chamber0 = pygame.image.load('resources/chamber0.png')
 
 # --- Objects ---
-playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, ChamberList[0])
+playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
 
 B_start = Button([64, 64], "RESUME", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([64, 165], "NEW GAME", lambda:changeGameState(NEWGAME))
