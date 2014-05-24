@@ -176,8 +176,8 @@ class Character(object):
             if [self.nextPosition[0] / 64, self.nextPosition[1] / 64] == warp.position and self.warped == False:
                 #play a sound: door
                 self.currentChamber = chamberList[warp.destinationChamber]
-                self.nextPosition[0] = chamberList[warp.destinationChamber].warps[self.tracker].position[0] * 64
-                self.nextPosition[1] = chamberList[warp.destinationChamber].warps[self.tracker].position[1] * 64
+                self.nextPosition[0] = chamberList[warp.destinationChamber].warps[warp.destinationID].position[0] * 64
+                self.nextPosition[1] = chamberList[warp.destinationChamber].warps[warp.destinationID].position[1] * 64
                 self.position[0] = self.nextPosition[0]
                 self.position[1] = self.nextPosition[1]
                 self.warped = True
@@ -216,11 +216,14 @@ class Button(object):
             return False
 
 class Warp(object):
-    def __init__(self, position, destinationChamber):
+    def __init__(self, position, destinationChamber, destinationID): #ownID = index
         self.position = position
         self.destinationChamber = destinationChamber
+        self.destinationID = destinationID
 
 # --- Set up ---
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
+
 pygame.init()
 
 windowSurface = pygame.display.set_mode((1216, 768), 0, 32) #always 0 and 32
@@ -275,7 +278,7 @@ for script in os.listdir(path):
             elif comArgs[0].startswith("wall"):
                 mapWalls.append([int(comArgs[1]), int(comArgs[2])])
             elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
-                mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3])))
+                mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3]), int(comArgs[4])))
                 
         chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
 

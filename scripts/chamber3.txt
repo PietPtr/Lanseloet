@@ -53,7 +53,7 @@ wall|7|0
 wall|6|0
 wall|5|0
 wall|4|0
-warp|2|0
-warp|3|0
-warp|18|7
-warp|18|8
+warp|2|0|1|0
+warp|3|0|1|1
+warp|18|7|2|0
+warp|18|8|2|1
