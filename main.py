@@ -343,16 +343,16 @@ chamber0 = pygame.image.load('resources/chamber0.png')
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
 
-B_start = Button([64, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
-B_new = Button([64, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
-B_options = Button([64, 266], "MOGELIJCHEDE", lambda:yes())
-B_quit = Button([64, 367], "SLUTEN", lambda:quitGame())
+B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
+B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
+B_options = Button([720, 266], "MOGELIJCHEDE", lambda:yes())
+B_quit = Button([720, 367], "SLUTEN", lambda:quitGame())
 
-B_yes = Button([608 - 204, 367], "JA", lambda:yes())
+B_yes = Button([608 - 469, 367], "JA", lambda:yes())
 B_no = Button([608 + 5, 367], "NEEN", lambda:no())
 
-B_continue = Button([64, 165], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
-B_menu = Button([64, 266], "MENU", lambda:changeGameState(MENU))
+B_continue = Button([720, 165], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
+B_menu = Button([720, 266], "MENU", lambda:changeGameState(MENU))
 
 # --- Main loop ---
 while True:
@@ -393,10 +393,17 @@ while True:
     if GameState == NEWGAME:
         windowSurface.blit(menuBg, (0, 0))
         if saveState != defaultSaveState:
-            warningBig = bigFont.render("Passet di op!", True, RED)
-            warningSmall = basicFont.render("Alsdu een niewe spel beghint, en wert alde spel nie bewaert. Bisdu seeker?", True, RED)
-            windowSurface.blit(warningBig, (608 - (warningBig.get_size()[0] / 2), 100))
-            windowSurface.blit(warningSmall, (608 - (warningSmall.get_size()[0] / 2), 200))
+            warningText = ["PASSET DI OP", "ALSDU EEN NIEWE SPEL BEGHINT", "EN WERT ALDE SPEL NIE BEWAERT.", "BISDU SEEKER"]
+            #text(warningText[0], [(1216 / 2) - getTextLength(0, 0)])
+            #text(warningText[1], [0, 45])
+            #text(warningText[2], [0, 90])
+            #text("BISDU SEEKER", [0, 135])
+
+            count = 0
+            for warningSentence in warningText:
+                text(warningText[count], [(1216 / 2) - (getTextLength(warningText[count]) / 2), 45 * count + 40])
+                count += 1
+            count = 0
             if B_yes.doTasks() == True:
                 os.remove("sav.sav")
                 resetSaveState()
@@ -446,7 +453,7 @@ while True:
             
     # --- Debug ---
     if showDebug == True:
-        debug = playerChar.position
+        debug = mousePosition
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
