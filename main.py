@@ -7,6 +7,13 @@ Create script interpreter
         - walk <dir> <amount>    |
         - playsound <soundname>  |
         - say <text>             | subtitles?
+
+pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
+position|4|1|2|0   X:4 Y:1 direction facing: 2 (down) in chamber0
+trigger|4|2        trigger tile 0 is at X:4 Y:2
+trigger|3|1        trigger tile 1 is at X:3 Y:1
+walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
+                   only go to next command when the previous one is finished.
 """
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
@@ -36,7 +43,7 @@ def text(text, coords):
     global alphabetPictures
     
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", "."]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!"]
     index = 0
     for letter in text:
         outputList.append(alphabet.index(text[index]))
@@ -56,7 +63,7 @@ def getTextLength(text):
     textLength = 0
 
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", "."]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!"]
     count = 0
     for letter in text:
         outputList.append(alphabet.index(text[count]))
@@ -274,27 +281,54 @@ for picture in alphabetPictures:
     letterSizeList.append(picture.get_size()[0])
 
 chamberList = []
+eventList = []
 
 path = os.path.abspath("scripts")
 for script in os.listdir(path):
     with open('scripts/' + script, 'rb') as csvscript:
         scriptReader = csv.reader(csvscript, delimiter=' ', quotechar='"')
         scriptList = []
-        for command in scriptReader:
-            scriptList.append(command)
-        mapWalls = []
-        mapWarps = []
-        for command in scriptList:
-            comArgs = command[0].split('|')
-            if comArgs[0].startswith("pic"):
-                mapImage = pygame.image.load('resources/' + comArgs[1])
-            elif comArgs[0].startswith("wall"):
-                mapWalls.append([int(comArgs[1]), int(comArgs[2])])
-            elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
-                mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3]), int(comArgs[4])))
-                
-        chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
+        if script.startswith('chamber'):
+            for command in scriptReader:
+                scriptList.append(command)
+            mapWalls = []
+            mapWarps = []
+            for command in scriptList:
+                comArgs = command[0].split('|')
+                if comArgs[0].startswith("pic"):
+                    mapImage = pygame.image.load('resources/' + comArgs[1])
+                elif comArgs[0].startswith("wall"):
+                    mapWalls.append([int(comArgs[1]), int(comArgs[2])])
+                elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
+                    mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3]), int(comArgs[4])))
+                    
+            chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
+        elif script.startswith('event'):
+            print script
+            for command in scriptReader:
+                scriptList.append(command)
 
+            commandList = []
+
+            for command in scriptList:
+                comArgs = command[0].split("|")
+                if comArgs[0].startswith("pic"):
+                    eventSpriteList = []
+                    for eventPicture in comArgs:
+                        if eventPicture != 'pics':
+                            eventSpriteList.append(pygame.transform.scale(pygame.image.load("resources/" + eventPicture), (64, 64)))
+                elif comArgs[0].startswith("position"):
+                    eventPosition = [int(comArgs[1]) * 64, int(comArgs[2]) * 64]
+                    eventDirection = int(comArgs[3])
+                    eventChamber = chamberList[int(comArgs[4])]
+                elif comArgs[0].startswith("trigger"):
+                    eventTrigger = [int(comArgs[1]), int(comArgs[2])]
+                else:
+                    commandList.append(command)
+                    print commandList
+
+            eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber))
+                
 # --- Constants ---
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -310,6 +344,7 @@ SEARCHPLAY = 2
 RUNPLAY = 3
 PAUSE = 4
 NEWGAME = 5
+OPTIONS = 6
 GameState = 0
 
 # --- Image & music Loading --- 
@@ -342,10 +377,11 @@ chamber0 = pygame.image.load('resources/chamber0.png')
 
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
+testEvent = Character([64, 64], 2, directionList, chamberList[0])
 
 B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
-B_options = Button([720, 266], "MOGELIJCHEDE", lambda:yes())
+B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS))
 B_quit = Button([720, 367], "SLUTEN", lambda:quitGame())
 
 B_yes = Button([608 - 469, 367], "JA", lambda:yes())
@@ -389,15 +425,13 @@ while True:
         B_new.doTasks()
         B_options.doTasks()
         B_quit.doTasks()
-    
+    if GameState == OPTIONS:
+        windowSurface.blit(menuBg, (0, 0))
+        B_menu.doTasks()
     if GameState == NEWGAME:
         windowSurface.blit(menuBg, (0, 0))
         if saveState != defaultSaveState:
-            warningText = ["PASSET DI OP", "ALSDU EEN NIEWE SPEL BEGHINT", "EN WERT ALDE SPEL NIE BEWAERT.", "BISDU SEEKER"]
-            #text(warningText[0], [(1216 / 2) - getTextLength(0, 0)])
-            #text(warningText[1], [0, 45])
-            #text(warningText[2], [0, 90])
-            #text("BISDU SEEKER", [0, 135])
+            warningText = ["PASSET DI OP!", "ALSDU EEN NIEWE SPEL BEGHINT,", "EN WERT ALDE SPEL NIE BEWAERT.", "BISDU SEEKER?"]
 
             count = 0
             for warningSentence in warningText:
@@ -413,6 +447,8 @@ while True:
         elif saveState == defaultSaveState:
             saveState = defaultSaveState
             GameState = SEARCHPLAY
+
+
     
     if GameState == PAUSE:
         windowSurface.blit(pauseBg, (0, 0))
@@ -420,6 +456,7 @@ while True:
         B_quit.doTasks()
         if B_menu.doTasks():
             saveAll()
+            
     if GameState == SEARCHPLAY:
         # --- first blit/fill ---
         windowSurface.fill(BLACK)
@@ -427,6 +464,10 @@ while True:
 
         playerChar.updateAnimation()
         playerChar.update()
+
+        for event in eventList:
+            event.updateAnimation()
+            event.update()
 
         # --- Movement ---
         if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
@@ -453,7 +494,7 @@ while True:
             
     # --- Debug ---
     if showDebug == True:
-        debug = mousePosition
+        debug = playerChar.nextPosition
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
