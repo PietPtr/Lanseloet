@@ -380,8 +380,6 @@ while True:
         B_new.doTasks()
         B_options.doTasks()
         B_quit.doTasks()
-
-        text("ABCDEFGHIJKLMNOPQRSTUVWXYZ", [10, 500])
     
     if GameState == NEWGAME:
         windowSurface.blit(menuBg, (0, 0))
@@ -404,7 +402,8 @@ while True:
         windowSurface.blit(pauseBg, (0, 0))
         B_continue.doTasks()
         B_quit.doTasks()
-        B_menu.doTasks()
+        if B_menu.doTasks():
+            saveAll()
     if GameState == SEARCHPLAY:
         # --- first blit/fill ---
         windowSurface.fill(BLACK)
