@@ -50,6 +50,21 @@ def text(text, coords):
         textLength = textLength + int(alphabetPictures[outputList[count]].get_size()[0])
         count += 1
 
+def getTextLength(text):
+    global letterSizeList
+
+    textLength = 0
+
+    outputList = []
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", "."]
+    count = 0
+    for letter in text:
+        outputList.append(alphabet.index(text[count]))
+        textLength = textLength + int(letterSizeList[alphabet.index(text[count])])
+        count += 1
+
+    return textLength
+
 """saveState"""
 def saveAll():
     global playerPos
@@ -79,10 +94,6 @@ def resetSaveState():
 
     showDebug = saveState[4]
     playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
-
-"""Scripts/Chambers loading"""
-#def loadScripts():
-    
 
 """Button functions"""
 def newGame():
@@ -194,20 +205,18 @@ class Button(object):
         self.function = function
         self.image = [pygame.image.load('resources/button.png'), pygame.image.load('resources/buttonH.png')]
         self.hovering = False
+        self.size = [self.image[0].get_size()[0], self.image[0].get_size()[1]]
     def doTasks(self):
         global clicked
         if self.hovering == False:
             windowSurface.blit(self.image[0], (self.position[0], self.position[1]))
         elif self.hovering == True:
             windowSurface.blit(self.image[1], (self.position[0], self.position[1]))
-        
-        buttonText = basicFont.render(str(self.text), False, GREEN)
-        buttonTextSize = buttonText.get_size()
-        windowSurface.blit(buttonText, (self.position[0] + (100 - (buttonTextSize[0] / 2)), self.position[1] + (50 - (buttonTextSize[1] / 2))))
 
-        text(self.text, [self.position[0], self.position[1]])
+        text(self.text, [(self.position[0] + (self.size[0] / 2)) - getTextLength(self.text) / 2,
+                         (self.position[1] + (self.size[1] / 2)) - 45 / 2])
 
-        if mousePosition[0] > self.position[0] and mousePosition[0] < self.position[0] + 200 and mousePosition[1] > self.position[1] and mousePosition[1] < self.position[1] + 100: #Button is 200x100 px
+        if mousePosition[0] > self.position[0] and mousePosition[0] < self.position[0] + self.size[0] and mousePosition[1] > self.position[1] and mousePosition[1] < self.position[1] + self.size[1]: #Button is 200x100 px
             self.hovering = True
         else:
             self.hovering = False
