@@ -110,7 +110,6 @@ class Chamber(object):
         self.events = events  #list of character objects
         self.wallList = wallList    #list of coordinates
         self.i = 0
-        
         for coordList in self.wallList:
             coordList = [coordList[0] * 64, coordList[1] * 64]
             self.wallList[self.i] = coordList
@@ -133,6 +132,7 @@ class Character(object):
         self.currentChamber = currentChamber
         self.nextPosition = [self.position[0], self.position[1]]
         self.animationRunning = False
+        self.warped = False
     def move(self, direction):
         self.direction = direction
         if self.animationRunning == False:
@@ -144,6 +144,7 @@ class Character(object):
                 self.nextPosition[1] = self.nextPosition[1] + 64
             elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[0] + 64, self.nextPosition[1]]) == False:
                 self.nextPosition[0] = self.nextPosition[0] + 64
+        self.warped = False
     def updateAnimation(self):
         if self.position[0] != self.nextPosition[0]:
             if self.position[0] < self.nextPosition[0]:
@@ -169,7 +170,19 @@ class Character(object):
             self.nextPosition[1] = 64 * 11
         elif self.nextPosition[1] < 0:
             self.nextPosition[1] = 0
-    
+
+        self.tracker = 0
+        for warp in self.currentChamber.warps:
+            if [self.nextPosition[0] / 64, self.nextPosition[1] / 64] == warp.position and self.warped == False:
+                #play a sound: door
+                self.currentChamber = chamberList[warp.destinationChamber]
+                self.nextPosition[0] = chamberList[warp.destinationChamber].warps[self.tracker].position[0] * 64
+                self.nextPosition[1] = chamberList[warp.destinationChamber].warps[self.tracker].position[1] * 64
+                self.position[0] = self.nextPosition[0]
+                self.position[1] = self.nextPosition[1]
+                self.warped = True
+            self.tracker += 1
+
         windowSurface.blit(self.spriteList[self.direction], (self.position[0], self.position[1]))
 
 class Button(object):
@@ -201,6 +214,11 @@ class Button(object):
             return True
         else:
             return False
+
+class Warp(object):
+    def __init__(self, position, destinationChamber):
+        self.position = position
+        self.destinationChamber = destinationChamber
 
 # --- Set up ---
 pygame.init()
@@ -249,14 +267,17 @@ for script in os.listdir(path):
         for command in scriptReader:
             scriptList.append(command)
         mapWalls = []
+        mapWarps = []
         for command in scriptList:
             comArgs = command[0].split('|')
             if comArgs[0].startswith("pic"):
                 mapImage = pygame.image.load('resources/' + comArgs[1])
             elif comArgs[0].startswith("wall"):
                 mapWalls.append([int(comArgs[1]), int(comArgs[2])])
-            #elif event
-        chamberList.append(Chamber(mapImage, [], [], mapWalls))
+            elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
+                mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3])))
+                
+        chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -408,7 +429,7 @@ while True:
             
     # --- Debug ---
     if showDebug == True:
-        debug = playerChar.nextPosition
+        debug = playerChar.position
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
