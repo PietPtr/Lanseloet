@@ -1,20 +1,12 @@
 """
 TODO:
 
-Footsteps
-
 Create script interpreter
 - Should be able to understand commands from a text file
     - available commands should be:
         - walk <dir> <amount>    |
         - playsound <soundname>  |
         - say <text>             | subtitles?
-Read Chambers from textFile
-- should be able to read warps to/from coordinates.
-    - Example:
-        chamber1.png
-        warp,12,0,chamber0,2     | Warp at x: 12, y:0 to warp 1 in chamber0 Chamber. If player stands on the warp it will be teleported to the warp ID in the room
-
 """
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
@@ -31,22 +23,32 @@ def loadFont():
     global alphabetPictures
     path = os.path.abspath("font")
     for picture in os.listdir(path):
-        alphabetPictures.append(pygame.image.load("font/" + picture))
+        alphabetPictures.append([pygame.image.load("font/" + picture), picture])
+    
+    sortedAlphabetPictures = sorted(alphabetPictures, key=lambda x: int(x[1].split('.')[0]))
+
+    alphabetPictures = []
+    
+    for i in sortedAlphabetPictures:
+        alphabetPictures.append(i[0])
 
 def text(text, coords):
     global alphabetPictures
     
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", ",", "."]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", "."]
     index = 0
     for letter in text:
         outputList.append(alphabet.index(text[index]))
         index += 1
+    #print outputList
 
-    textLength = 0       
+    textLength = 0
+    count = 0
     for index in outputList:
-        windowSurface.blit(alphabetPictures[outputList[index]], (coords[0] + textLength, coords[1]))
-        textLength = textLength + int(alphabetPictures[outputList[index]].get_size()[0])
+        windowSurface.blit(alphabetPictures[outputList[count]], (coords[0] + textLength, coords[1]))
+        textLength = textLength + int(alphabetPictures[outputList[count]].get_size()[0])
+        count += 1
 
 """saveState"""
 def saveAll():
@@ -203,6 +205,8 @@ class Button(object):
         buttonTextSize = buttonText.get_size()
         windowSurface.blit(buttonText, (self.position[0] + (100 - (buttonTextSize[0] / 2)), self.position[1] + (50 - (buttonTextSize[1] / 2))))
 
+        text(self.text, [self.position[0], self.position[1]])
+
         if mousePosition[0] > self.position[0] and mousePosition[0] < self.position[0] + 200 and mousePosition[1] > self.position[1] and mousePosition[1] < self.position[1] + 100: #Button is 200x100 px
             self.hovering = True
         else:
@@ -330,15 +334,16 @@ chamber0 = pygame.image.load('resources/chamber0.png')
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
 
-B_start = Button([64, 64], "RESUME", lambda:changeGameState(SEARCHPLAY))
-B_new = Button([64, 165], "NEW GAME", lambda:changeGameState(NEWGAME))
-B_options = Button([64, 266], "OPTIONS", lambda:yes())
-B_quit = Button([64, 367], "QUIT", lambda:quitGame())
+B_start = Button([64, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
+B_new = Button([64, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
+B_options = Button([64, 266], "MOGELIJCHEDE", lambda:yes())
+B_quit = Button([64, 367], "SLUTEN", lambda:quitGame())
 
-B_yes = Button([608 - 204, 367], "YES", lambda:yes())
-B_no = Button([608 + 5, 367], "NO", lambda:no())
+B_yes = Button([608 - 204, 367], "JA", lambda:yes())
+B_no = Button([608 + 5, 367], "NEEN", lambda:no())
 
-B_continue = Button([64, 266], "CONTINUE", lambda:changeGameState(SEARCHPLAY))
+B_continue = Button([64, 165], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
+B_menu = Button([64, 266], "MENU", lambda:changeGameState(MENU))
 
 # --- Main loop ---
 while True:
@@ -376,13 +381,13 @@ while True:
         B_options.doTasks()
         B_quit.doTasks()
 
-        text("QWERTYUIOPASDFGHJKLZXCVBNM", [10, 500])
+        text("ABCDEFGHIJKLMNOPQRSTUVWXYZ", [10, 500])
     
     if GameState == NEWGAME:
         windowSurface.blit(menuBg, (0, 0))
         if saveState != defaultSaveState:
-            warningBig = bigFont.render("WARNING!", True, RED)
-            warningSmall = basicFont.render("Passet di op! Alsdu een niewe spel beghint, en wert alde spel nie bewaert. Bisdu seeker?", True, RED)
+            warningBig = bigFont.render("Passet di op!", True, RED)
+            warningSmall = basicFont.render("Alsdu een niewe spel beghint, en wert alde spel nie bewaert. Bisdu seeker?", True, RED)
             windowSurface.blit(warningBig, (608 - (warningBig.get_size()[0] / 2), 100))
             windowSurface.blit(warningSmall, (608 - (warningSmall.get_size()[0] / 2), 200))
             if B_yes.doTasks() == True:
@@ -399,6 +404,7 @@ while True:
         windowSurface.blit(pauseBg, (0, 0))
         B_continue.doTasks()
         B_quit.doTasks()
+        B_menu.doTasks()
     if GameState == SEARCHPLAY:
         # --- first blit/fill ---
         windowSurface.fill(BLACK)
