@@ -1,5 +1,4 @@
 pics|lanseloetup.png|lanseloetleft.png|lanseloetdown.png|lanseloetright.png
-position|5|1|2|0
-trigger|5|2
+position|6|3|2|3
+trigger|6|2
 walk|4|3
-walk|2|2
