@@ -14,6 +14,10 @@ trigger|4|2        trigger tile 0 is at X:4 Y:2
 trigger|3|1        trigger tile 1 is at X:3 Y:1
 walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
                    only go to next command when the previous one is finished.
+
+load all sounds by number
+in playsound: sound name = number
+
 """
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
@@ -24,7 +28,7 @@ defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True]
 def distance(speed, time):
     distance = time * speed
     return distance
-
+5
 """font"""
 def loadFont():
     global alphabetPictures
@@ -48,7 +52,6 @@ def text(text, coords):
     for letter in text:
         outputList.append(alphabet.index(text[index]))
         index += 1
-    #print outputList
 
     textLength = 0
     count = 0
@@ -187,9 +190,8 @@ class Character(object):
             self.animationRunning = False
             
     def exeCommands(self):
-        print commandList
         self.commandArgs = commandList[0][0].split('|')
-        if self.commandArgs[0] == "walk":
+        if self.commandArgs[0] == "walk" and self.animationRunning == False:
             if int(self.commandArgs[2]) == 0:
                 self.nextPosition[1] = self.nextPosition[1] - 64 * int(self.commandArgs[1])
             elif int(self.commandArgs[2]) == 1:
@@ -199,6 +201,11 @@ class Character(object):
             elif int(self.commandArgs[2]) == 3:
                 self.nextPosition[0] = self.nextPosition[0] + 64 * int(self.commandArgs[1])
             del self.commandList[0]
+            return True
+        return False
+
+        #if self.commandArgs[0] == "playsound" and pygame.mixer.get_busy() == False:
+            
     
     def update(self):
         # --- Checks if position is valid, and blits to windowSurface ---
@@ -224,7 +231,7 @@ class Character(object):
             self.tracker += 1
 
         if playerChar.currentChamber == self.currentChamber:
-            windowSurface.blit(self.spriteList[self.direction], (self.position[0], self.position[1]))
+            windowSurface.blit(self.spriteList[self.direction], (self.position[0], self.position[1] - 64))
 
 class Button(object):
     def __init__(self, position, text, function):
@@ -294,8 +301,10 @@ lastPress = 0
 
 clicked = False
 screenshot = False
+grid = False
 
 escape = False
+playerLocked = False
 
 reverseDirection = [2, 3, 0, 1]
 
@@ -339,7 +348,7 @@ for script in os.listdir(path):
                     eventSpriteList = []
                     for eventPicture in comArgs:
                         if eventPicture != 'pics':
-                            eventSpriteList.append(pygame.transform.scale(pygame.image.load("resources/" + eventPicture), (64, 64)))
+                            eventSpriteList.append(pygame.transform.scale(pygame.image.load("resources/" + eventPicture), (64, 128)))
                 elif comArgs[0].startswith("position"):
                     eventPosition = [int(comArgs[1]) * 64, int(comArgs[2]) * 64]
                     eventDirection = int(comArgs[3])
@@ -385,7 +394,7 @@ directionList = [pygame.image.load('resources/up.png'),
 
 picScaleTrack = 0
 for picture in directionList:
-    directionList[picScaleTrack] = pygame.transform.scale(picture, (64, 64))
+    directionList[picScaleTrack] = pygame.transform.scale(picture, (64, 128))
     picScaleTrack += 1
 
 player = directionList[5]
@@ -397,13 +406,17 @@ pauseBg = pygame.image.load('resources/pause.png')
 
 chamber0 = pygame.image.load('resources/chamber0.png')
 
+soundList = [pygame.mixer.Sound('stem.mp3')]
+
+menuMusic = pygame.mixer.music.load('resources/menuMusic.wav')
+#pygame.mixer.music.play(-1, 0.0)
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
 
 B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
 B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS))
-B_quit = Button([720, 367], "SLUTEN", lambda:quitGame())
+B_quit = Button([720, 367], "SLUIJTEN", lambda:quitGame())
 
 B_yes = Button([608 - 469, 367], "JA", lambda:yes())
 B_no = Button([608 + 5, 367], "NEEN", lambda:no())
@@ -430,6 +443,9 @@ while True:
                 screenshot = True
             elif event.key == 27:
                 escape = True
+            elif event.key == 282:
+                grid = not grid
+                print grid
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 clicked = True
@@ -489,25 +505,30 @@ while True:
             event.update()
 
             if playerChar.position in event.triggerTile and event.commandList != [] and reverseDirection[playerChar.direction] == event.direction:
-                event.exeCommands()
+                if event.exeCommands() or event.animationRunning:
+                    playerLocked = True
+            elif event.animationRunning == False:
+                playerLocked = False
 
         # --- Movement ---
-        if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
-            playerChar.move(0)
-        elif pygame.key.get_pressed()[97] and pygame.time.get_ticks() - lastPress >= 100:
-            playerChar.move(1)
-        elif pygame.key.get_pressed()[115] and pygame.time.get_ticks() - lastPress >= 100:
-            playerChar.move(2)
-        elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 100:
-            playerChar.move(3)
-        if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 100:
-            lastPress = pygame.time.get_ticks()
+        if playerLocked == False:
+            if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
+                playerChar.move(0)
+            elif pygame.key.get_pressed()[97] and pygame.time.get_ticks() - lastPress >= 100:
+                playerChar.move(1)
+            elif pygame.key.get_pressed()[115] and pygame.time.get_ticks() - lastPress >= 100:
+                playerChar.move(2)
+            elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 100:
+                playerChar.move(3)
+            if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 100:
+                lastPress = pygame.time.get_ticks()
 
         # --- Tile visualisation ---
-        for y in range(-1, 12):
-            for x in range(-1, 19):
-                #windowSurface.blit(tile, (x * 64, y * 64))
-                pass
+        if grid == True:
+            for y in range(-1, 12):
+                for x in range(-1, 19):
+                    windowSurface.blit(tile, (x * 64, y * 64))
+                    pass
 
         # --- Pause ---
         if escape:
@@ -516,7 +537,7 @@ while True:
             
     # --- Debug ---
     if showDebug == True:
-        debug = playerChar.nextPosition
+        debug = eventList[0].animationRunning
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 

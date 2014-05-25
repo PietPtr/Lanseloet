@@ -15,6 +15,14 @@ wall|0|11
 wall|1|11
 wall|2|11
 wall|3|11
+wall|5|1
+wall|5|2
+wall|5|3
+wall|5|4
+wall|5|5
+wall|5|6
+wall|5|10
+wall|5|9
 wall|4|11
 wall|5|11
 wall|6|11
