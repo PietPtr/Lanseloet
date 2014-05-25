@@ -22,7 +22,7 @@ in playsound: sound name = number
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
 
-defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True]
+defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 
 # --- Functions ---
 def distance(speed, time):
@@ -77,11 +77,9 @@ def getTextLength(text):
 
 """saveState"""
 def saveAll():
-    global playerPos
     global showDebug
-    global nextPlayerPos
     global saveState
-    saveState = [[playerChar.position[0], playerChar.position[1], 0], [], [], [], showDebug]
+    saveState = [[playerChar.position[0], playerChar.position[1], chamberList.index(playerChar.currentChamber)], [], [], [], showDebug]
     try:
         pickle.dump(saveState, open("sav.sav", "wb"))
         return True
@@ -200,6 +198,7 @@ class Character(object):
                 self.nextPosition[1] = self.nextPosition[1] + 64 * int(self.commandArgs[1])
             elif int(self.commandArgs[2]) == 3:
                 self.nextPosition[0] = self.nextPosition[0] + 64 * int(self.commandArgs[1])
+            self.direction = int(self.commandArgs[2])
             del self.commandList[0]
             return True
         return False
@@ -379,18 +378,18 @@ OPTIONS = 6
 GameState = 0
 
 # --- Image & music Loading --- 
-directionList = [pygame.image.load('resources/up.png'),
-                 pygame.image.load('resources/left.png'),
-                 pygame.image.load('resources/down.png'),
-                 pygame.image.load('resources/right.png'),
-                 pygame.image.load('resources/upl.png'),
-                 pygame.image.load('resources/leftl.png'),
-                 pygame.image.load('resources/downl.png'),
-                 pygame.image.load('resources/rightl.png'),
-                 pygame.image.load('resources/upr.png'),
-                 pygame.image.load('resources/leftr.png'),
-                 pygame.image.load('resources/downr.png'),
-                 pygame.image.load('resources/rightr.png')] 
+directionList = [pygame.image.load('resources/sandrijn/up.png'),
+                 pygame.image.load('resources/sandrijn/left.png'),
+                 pygame.image.load('resources/sandrijn/down.png'),
+                 pygame.image.load('resources/sandrijn/right.png'),
+                 pygame.image.load('resources/sandrijn/upl.png'),
+                 pygame.image.load('resources/sandrijn/leftl.png'),
+                 pygame.image.load('resources/sandrijn/downl.png'),
+                 pygame.image.load('resources/sandrijn/rightl.png'),
+                 pygame.image.load('resources/sandrijn/upr.png'),
+                 pygame.image.load('resources/sandrijn/leftr.png'),
+                 pygame.image.load('resources/sandrijn/downr.png'),
+                 pygame.image.load('resources/sandrijn/rightr.png')] 
 
 picScaleTrack = 0
 for picture in directionList:
@@ -408,10 +407,10 @@ chamber0 = pygame.image.load('resources/chamber0.png')
 
 soundList = [pygame.mixer.Sound('stem.mp3')]
 
-menuMusic = pygame.mixer.music.load('resources/menuMusic.wav')
+menuMusic = pygame.mixer.music.load('sounds/menuMusic.wav')
 #pygame.mixer.music.play(-1, 0.0)
 # --- Objects ---
-playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
+playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
 
 B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
@@ -537,7 +536,7 @@ while True:
             
     # --- Debug ---
     if showDebug == True:
-        debug = eventList[0].animationRunning
+        debug = playerChar.position
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
