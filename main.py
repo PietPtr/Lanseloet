@@ -189,7 +189,7 @@ class Character(object):
     def exeCommands(self):
         print commandList
         self.commandArgs = commandList[0][0].split('|')
-        if self.commandArgs[0] == "walk":
+        if self.commandArgs[0] == "walk" and self.animationRunning == False:
             if int(self.commandArgs[2]) == 0:
                 self.nextPosition[1] = self.nextPosition[1] - 64 * int(self.commandArgs[1])
             elif int(self.commandArgs[2]) == 1:
@@ -403,7 +403,7 @@ playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, cha
 B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
 B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS))
-B_quit = Button([720, 367], "SLUTEN", lambda:quitGame())
+B_quit = Button([720, 367], "SLUIJTEN", lambda:quitGame())
 
 B_yes = Button([608 - 469, 367], "JA", lambda:yes())
 B_no = Button([608 + 5, 367], "NEEN", lambda:no())
