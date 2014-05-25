@@ -100,7 +100,8 @@ def resetSaveState():
     saveState = defaultSaveState
 
     showDebug = saveState[4]
-    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
+    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
+
 
 """Button functions"""
 def newGame():
@@ -145,14 +146,17 @@ class Chamber(object):
             return False
 
 class Character(object):
-    def __init__(self, position, direction, spriteList, currentChamber):
+    def __init__(self, position, direction, spriteList, currentChamber, triggerTile, commandList):
         self.position = position
         self.direction = direction
         self.spriteList = spriteList
         self.currentChamber = currentChamber
+        self.triggerTile = triggerTile
+        self.commandList = commandList
         self.nextPosition = [self.position[0], self.position[1]]
         self.animationRunning = False
         self.warped = False
+        
     def move(self, direction):
         self.direction = direction
         if self.animationRunning == False:
@@ -165,6 +169,7 @@ class Character(object):
             elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[0] + 64, self.nextPosition[1]]) == False:
                 self.nextPosition[0] = self.nextPosition[0] + 64
         self.warped = False
+        
     def updateAnimation(self):
         if self.position[0] != self.nextPosition[0]:
             if self.position[0] < self.nextPosition[0]:
@@ -180,6 +185,21 @@ class Character(object):
             self.animationRunning = True
         if self.position[1] == self.nextPosition[1] and self.position[0] == self.nextPosition[0]:
             self.animationRunning = False
+            
+    def exeCommands(self):
+        print commandList
+        self.commandArgs = commandList[0][0].split('|')
+        if self.commandArgs[0] == "walk":
+            if int(self.commandArgs[2]) == 0:
+                self.nextPosition[1] = self.nextPosition[1] - 64 * int(self.commandArgs[1])
+            elif int(self.commandArgs[2]) == 1:
+                self.nextPosition[0] = self.nextPosition[0] - 64 * int(self.commandArgs[1])
+            elif int(self.commandArgs[2]) == 2:
+                self.nextPosition[1] = self.nextPosition[1] + 64 * int(self.commandArgs[1])
+            elif int(self.commandArgs[2]) == 3:
+                self.nextPosition[0] = self.nextPosition[0] + 64 * int(self.commandArgs[1])
+            del self.commandList[0]
+    
     def update(self):
         # --- Checks if position is valid, and blits to windowSurface ---
         if self.nextPosition[0] > 64 * 18:
@@ -203,10 +223,11 @@ class Character(object):
                 self.warped = True
             self.tracker += 1
 
-        windowSurface.blit(self.spriteList[self.direction], (self.position[0], self.position[1]))
+        if playerChar.currentChamber == self.currentChamber:
+            windowSurface.blit(self.spriteList[self.direction], (self.position[0], self.position[1]))
 
 class Button(object):
-    def __init__(self, position, text, function):   
+    def __init__(self, position, text, function):
         self.position = position
         self.text = text
         self.function = function
@@ -276,6 +297,8 @@ screenshot = False
 
 escape = False
 
+reverseDirection = [2, 3, 0, 1]
+
 letterSizeList = []
 for picture in alphabetPictures:
     letterSizeList.append(picture.get_size()[0])
@@ -304,11 +327,11 @@ for script in os.listdir(path):
                     
             chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
         elif script.startswith('event'):
-            print script
             for command in scriptReader:
                 scriptList.append(command)
 
             commandList = []
+            eventTrigger = []
 
             for command in scriptList:
                 comArgs = command[0].split("|")
@@ -322,12 +345,11 @@ for script in os.listdir(path):
                     eventDirection = int(comArgs[3])
                     eventChamber = chamberList[int(comArgs[4])]
                 elif comArgs[0].startswith("trigger"):
-                    eventTrigger = [int(comArgs[1]), int(comArgs[2])]
+                    eventTrigger.append([int(comArgs[1]) * 64, int(comArgs[2]) * 64])
                 else:
                     commandList.append(command)
-                    print commandList
 
-            eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber))
+            eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
                 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -376,8 +398,7 @@ pauseBg = pygame.image.load('resources/pause.png')
 chamber0 = pygame.image.load('resources/chamber0.png')
 
 # --- Objects ---
-playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0])
-testEvent = Character([64, 64], 2, directionList, chamberList[0])
+playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
 
 B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
@@ -447,8 +468,6 @@ while True:
         elif saveState == defaultSaveState:
             saveState = defaultSaveState
             GameState = SEARCHPLAY
-
-
     
     if GameState == PAUSE:
         windowSurface.blit(pauseBg, (0, 0))
@@ -468,6 +487,9 @@ while True:
         for event in eventList:
             event.updateAnimation()
             event.update()
+
+            if playerChar.position in event.triggerTile and event.commandList != [] and reverseDirection[playerChar.direction] == event.direction:
+                event.exeCommands()
 
         # --- Movement ---
         if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
