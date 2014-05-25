@@ -2,3 +2,29 @@ pics|lanseloetup.png|lanseloetleft.png|lanseloetdown.png|lanseloetright.png
 position|6|3|2|3
 trigger|6|2
 walk|4|3
+<<<<<<< HEAD
+=======
+walk|2|2
+walk|2|1
+walk|2|0
+walk|2|3
+walk|2|2
+walk|2|1
+walk|2|0
+walk|2|3
+walk|2|2
+walk|2|1
+walk|2|0
+walk|2|3
+walk|2|2
+walk|2|1
+walk|2|0
+walk|2|3
+walk|2|2
+walk|2|1
+walk|2|0
+walk|2|3
+walk|2|2
+walk|2|1
+walk|2|0
+>>>>>>> 980ca9e8ad29f8c6aab7a534980ec30f862732c0
