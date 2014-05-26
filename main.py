@@ -1,23 +1,11 @@
 """
-TODO:
-
-Create script interpreter
-- Should be able to understand commands from a text file
-    - available commands should be:
-        - walk <dir> <amount>    |
-        - playsound <soundname>  |
-        - say <text>             | subtitles?
-
+EVENT EXAMPLE SCRIPT:
 pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
 position|4|1|2|0   X:4 Y:1 direction facing: 2 (down) in chamber0
 trigger|4|2        trigger tile 0 is at X:4 Y:2
 trigger|3|1        trigger tile 1 is at X:3 Y:1
 walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
                    only go to next command when the previous one is finished.
-
-load all sounds by number
-in playsound: sound name = number
-
 """
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
