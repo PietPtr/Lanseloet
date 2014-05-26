@@ -212,8 +212,6 @@ class Character(object):
                 self.lastCmdTime = pygame.time.get_ticks()
                 break
 
-
-
             elif self.commandList[self.cmdCount] == ["DONE"]:
                 next
 
@@ -466,7 +464,6 @@ while True:
                 escape = True
             elif event.key == 282:
                 grid = not grid
-                print grid
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 clicked = True
