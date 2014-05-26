@@ -1,11 +1,23 @@
 """
-EVENT EXAMPLE SCRIPT:
+TODO:
+
+Create script interpreter
+- Should be able to understand commands from a text file
+    - available commands should be:
+        - walk <dir> <amount>    |
+        - playsound <soundname>  |
+        - say <text>             | subtitles?
+
 pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
 position|4|1|2|0   X:4 Y:1 direction facing: 2 (down) in chamber0
 trigger|4|2        trigger tile 0 is at X:4 Y:2
 trigger|3|1        trigger tile 1 is at X:3 Y:1
 walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
                    only go to next command when the previous one is finished.
+
+load all sounds by number
+in playsound: sound name = number
+
 """
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
@@ -176,23 +188,31 @@ class Character(object):
             self.animationRunning = False
             
     def exeCommands(self):
-        self.commandArgs = commandList[0][0].split('|')
-        if self.commandArgs[0] == "walk" and self.animationRunning == False:
-            if int(self.commandArgs[2]) == 0:
-                self.nextPosition[1] = self.nextPosition[1] - 64 * int(self.commandArgs[1])
-            elif int(self.commandArgs[2]) == 1:
-                self.nextPosition[0] = self.nextPosition[0] - 64 * int(self.commandArgs[1])
-            elif int(self.commandArgs[2]) == 2:
-                self.nextPosition[1] = self.nextPosition[1] + 64 * int(self.commandArgs[1])
-            elif int(self.commandArgs[2]) == 3:
-                self.nextPosition[0] = self.nextPosition[0] + 64 * int(self.commandArgs[1])
-            self.direction = int(self.commandArgs[2])
-            del self.commandList[0]
-            return True
-        return False
+        self.cmdCount = 0
+        for cmd in self.commandList:
+            self.commandArgs = cmd[0].split('|')
+            if self.commandArgs[0] == "walk" and self.animationRunning == False:
+                if int(self.commandArgs[2]) == 0:
+                    self.nextPosition[1] = self.nextPosition[1] - 64 * int(self.commandArgs[1])
+                elif int(self.commandArgs[2]) == 1:
+                    self.nextPosition[0] = self.nextPosition[0] - 64 * int(self.commandArgs[1])
+                elif int(self.commandArgs[2]) == 2:
+                    self.nextPosition[1] = self.nextPosition[1] + 64 * int(self.commandArgs[1])
+                elif int(self.commandArgs[2]) == 3:
+                    self.nextPosition[0] = self.nextPosition[0] + 64 * int(self.commandArgs[1])
+                self.direction = int(self.commandArgs[2])
+                self.commandList[self.cmdCount] = ["DONE"]
+                break
 
-        #if self.commandArgs[0] == "playsound" and pygame.mixer.get_busy() == False:
-            
+            elif self.commandArgs[0] == "playsound" and pygame.mixer.get_busy() == 0:
+                soundList[int(self.commandArgs[1])].play()
+                self.commandList[self.cmdCount] = ["DONE"]
+                break
+
+            elif self.commandList[self.cmdCount] == ["DONE"]:
+                next
+
+            self.cmdCount += 1
     
     def update(self):
         # --- Checks if position is valid, and blits to windowSurface ---
@@ -289,6 +309,8 @@ lastPress = 0
 clicked = False
 screenshot = False
 grid = False
+
+commandsLeft = False
 
 escape = False
 playerLocked = False
@@ -393,10 +415,19 @@ pauseBg = pygame.image.load('resources/pause.png')
 
 chamber0 = pygame.image.load('resources/chamber0.png')
 
-soundList = [pygame.mixer.Sound('stem.mp3')]
+soundList = []
+for i in range(0, 999):
+    soundList.append(None)
 
 menuMusic = pygame.mixer.music.load('sounds/menuMusic.wav')
 #pygame.mixer.music.play(-1, 0.0)
+
+path = os.path.abspath("sounds/voices")
+for voice in os.listdir(path):
+    soundList[int(voice[0] + voice[1] + voice[2])] = pygame.mixer.Sound('sounds/voices/' + voice)
+
+soundList[0].play()
+
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
 
@@ -491,10 +522,15 @@ while True:
             event.updateAnimation()
             event.update()
 
-            if playerChar.position in event.triggerTile and event.commandList != [] and reverseDirection[playerChar.direction] == event.direction:
-                if event.exeCommands() or event.animationRunning:
+            commandsLeft = False
+            for command in event.commandList:
+                if command != ['DONE']:
+                    commandsLeft = True
+
+            if playerChar.position in event.triggerTile and commandsLeft == True and playerChar.currentChamber == event.currentChamber:
+                if event.exeCommands() or commandsLeft == True:
                     playerLocked = True
-            elif event.animationRunning == False:
+            elif commandsLeft == False:
                 playerLocked = False
 
         # --- Movement ---
@@ -524,7 +560,7 @@ while True:
             
     # --- Debug ---
     if showDebug == True:
-        debug = playerChar.position
+        debug = commandsLeft, playerLocked
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
