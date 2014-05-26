@@ -1,23 +1,12 @@
 """
 TODO:
 
-Create script interpreter
-- Should be able to understand commands from a text file
-    - available commands should be:
-        - walk <dir> <amount>    |
-        - playsound <soundname>  |
-        - say <text>             | subtitles?
-
 pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
 position|4|1|2|0   X:4 Y:1 direction facing: 2 (down) in chamber0
 trigger|4|2        trigger tile 0 is at X:4 Y:2
 trigger|3|1        trigger tile 1 is at X:3 Y:1
 walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
                    only go to next command when the previous one is finished.
-
-load all sounds by number
-in playsound: sound name = number
-
 """
 import pygame, sys, os, pickle, csv
 from pygame.locals import *
@@ -157,6 +146,8 @@ class Character(object):
         self.nextPosition = [self.position[0], self.position[1]]
         self.animationRunning = False
         self.warped = False
+        self.lastCmdTime = 0
+        self.waited = False
         
     def move(self, direction):
         self.direction = direction
@@ -191,7 +182,17 @@ class Character(object):
         self.cmdCount = 0
         for cmd in self.commandList:
             self.commandArgs = cmd[0].split('|')
-            if self.commandArgs[0] == "walk" and self.animationRunning == False:
+            
+            if self.commandArgs[0] == "wait":
+                if pygame.time.get_ticks() - self.lastCmdTime <= int(self.commandArgs[1]):
+                    self.waited = True
+                    break
+                elif self.waited == True and pygame.time.get_ticks() - self.lastCmdTime > int(self.commandArgs[1]):
+                    self.commandList[self.cmdCount] = ["DONE"]
+                    self.waited = False
+                    break
+                
+            elif self.commandArgs[0] == "walk" and self.animationRunning == False:
                 if int(self.commandArgs[2]) == 0:
                     self.nextPosition[1] = self.nextPosition[1] - 64 * int(self.commandArgs[1])
                 elif int(self.commandArgs[2]) == 1:
@@ -202,12 +203,16 @@ class Character(object):
                     self.nextPosition[0] = self.nextPosition[0] + 64 * int(self.commandArgs[1])
                 self.direction = int(self.commandArgs[2])
                 self.commandList[self.cmdCount] = ["DONE"]
+                self.lastCmdTime = pygame.time.get_ticks()
                 break
 
             elif self.commandArgs[0] == "playsound" and pygame.mixer.get_busy() == 0:
                 soundList[int(self.commandArgs[1])].play()
                 self.commandList[self.cmdCount] = ["DONE"]
+                self.lastCmdTime = pygame.time.get_ticks()
                 break
+
+
 
             elif self.commandList[self.cmdCount] == ["DONE"]:
                 next
@@ -425,8 +430,6 @@ menuMusic = pygame.mixer.music.load('sounds/menuMusic.wav')
 path = os.path.abspath("sounds/voices")
 for voice in os.listdir(path):
     soundList[int(voice[0] + voice[1] + voice[2])] = pygame.mixer.Sound('sounds/voices/' + voice)
-
-soundList[0].play()
 
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
