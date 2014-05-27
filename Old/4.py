@@ -448,6 +448,8 @@ B_no = Button([608 + 5, 367], "NEEN", lambda:no())
 B_continue = Button([720, 165], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_menu = Button([720, 266], "MENU", lambda:changeGameState(MENU))
 
+####################################IF TRIGGERTILE NOT IN SCRIPT TRIGGERTILE = POSITION - 1
+
 # --- Main loop ---
 while True:
     # --- Variables outside gamestate ---
