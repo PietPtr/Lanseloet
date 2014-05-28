@@ -339,7 +339,7 @@ escape = False
 playerLocked = False
 
 playerY = 300 #Maybe temporary?
-speed = 0.3
+speed = 1.3
 
 reverseDirection = [2, 3, 0, 1]
 
@@ -614,7 +614,7 @@ while True:
         if len(mapSlices) < 12:
             mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
                             
-        windowSurface.blit(directionList[3], (0, playerY))
+        windowSurface.blit(directionList[3], (128, playerY))
 
         if pygame.key.get_pressed()[119]:
             playerY = playerY - 1 #distance
@@ -623,7 +623,7 @@ while True:
 
         if pygame.time.get_ticks() - lastSpeedUp >= 1000: #Can be slowed by boosts
             lastSpeedUp = pygame.time.get_ticks()
-            speed = speed + 0.1 #Can be slowed by boosts too, maybe.
+            speed = speed + 0.01 #Can be slowed by boosts too, maybe.
     # --- Debug ---
     if showDebug == True:
         debug = speed
