@@ -8,7 +8,7 @@ trigger|3|1        trigger tile 1 is at X:3 Y:1
 walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
                    only go to next command when the previous one is finished.
 """
-import pygame, sys, os, pickle, csv
+import pygame, sys, os, pickle, csv, random
 from pygame.locals import *
 
 defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
@@ -279,6 +279,23 @@ class Warp(object):
         self.destinationChamber = destinationChamber
         self.destinationID = destinationID
 
+class MapSlice(object):
+    def __init__(self, position):
+        self.position = position
+        self.blockade = random.choice([blockadeList])
+    """
+    does:
+    rendering of the maps + blockades
+    updates position according to current player speed
+    probably some other stuff I dont know right now.
+    """
+
+class Blockade(object):
+    def __init__(self, picture, height):
+        self.picture = picture
+        self.height = height
+        self.position = random.randint(2, 11)
+
 # --- Set up ---
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
 
@@ -434,6 +451,17 @@ path = os.path.abspath("sounds/voices")
 for voice in os.listdir(path):
     soundList[int(voice[0] + voice[1] + voice[2])] = pygame.mixer.Sound('sounds/voices/' + voice)
 
+endGameBg = pygame.image.load("resources/endgame/default.png")
+
+blockadeList = []
+path = os.path.abspath("resources/endgame")
+for blockade in os.listdir(path):
+    blkArgs = blockade.split(',')
+    if blockade != "default.png":
+        blockadeList.append(Blockade(pygame.image.load("resources/endgame/" + blockade), int(blkArgs[1][0]))) #<- only gonna use 10 objects..?
+
+print blockadeList
+
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
 
@@ -520,9 +548,6 @@ while True:
         windowSurface.fill(BLACK)
         playerChar.currentChamber.render()
 
-        playerChar.updateAnimation()
-        playerChar.update()
-
         for event in eventList:
             event.updateAnimation()
             event.update()
@@ -537,7 +562,10 @@ while True:
                     playerLocked = True
             elif commandsLeft == False:
                 playerLocked = False
-                
+
+        playerChar.updateAnimation()
+        playerChar.update()
+        
         # --- Movement ---
         if playerLocked == False:
             if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
@@ -562,10 +590,22 @@ while True:
         if escape:
             GameState = PAUSE
             escape = False
+
+        # TEMP
+        if playerChar.nextPosition == [64, 64]:
+            runInit = pygame.time.get_ticks()
+            GameState = RUNPLAY
+        # TEMP
+
+    if GameState == RUNPLAY:
+        if pygame.time.get_ticks() - runInit < 1000:
+            windowSurface.fill(BLACK)
+        else:
+            windowSurface.fill(RED)
             
     # --- Debug ---
     if showDebug == True:
-        debug = playerLocked
+        debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
