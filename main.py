@@ -289,6 +289,9 @@ class MapSlice(object):
     updates position according to current player speed
     probably some other stuff I dont know right now.
     """
+    def update(self):
+        windowSurface.blit(endGameBg, (self.position, 0))
+        self.position = self.position - speed #distance
 
 class Blockade(object):
     def __init__(self, picture, height):
@@ -334,6 +337,9 @@ commandsLeft = False
 
 escape = False
 playerLocked = False
+
+playerY = 300 #Maybe temporary?
+speed = 0.3
 
 reverseDirection = [2, 3, 0, 1]
 
@@ -454,13 +460,12 @@ for voice in os.listdir(path):
 endGameBg = pygame.image.load("resources/endgame/default.png")
 
 blockadeList = []
+mapSlices = []
 path = os.path.abspath("resources/endgame")
 for blockade in os.listdir(path):
     blkArgs = blockade.split(',')
     if blockade != "default.png":
         blockadeList.append(Blockade(pygame.image.load("resources/endgame/" + blockade), int(blkArgs[1][0]))) #<- only gonna use 10 objects..?
-
-print blockadeList
 
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
@@ -593,19 +598,35 @@ while True:
 
         # TEMP
         if playerChar.nextPosition == [64, 64]:
-            runInit = pygame.time.get_ticks()
+            lastSpeedUp = pygame.time.get_ticks()
             GameState = RUNPLAY
+            for i in range(0, 10):
+                mapSlices.append(MapSlice(i * 128))
+                
         # TEMP
 
     if GameState == RUNPLAY:
-        if pygame.time.get_ticks() - runInit < 1000:
-            windowSurface.fill(BLACK)
-        else:
-            windowSurface.fill(RED)
-            
+        for slices in mapSlices:
+            slices.update()
+            if slices.position < -256:
+                del mapSlices[mapSlices.index(slices)]
+
+        if len(mapSlices) < 12:
+            mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
+                            
+        windowSurface.blit(directionList[3], (0, playerY))
+
+        if pygame.key.get_pressed()[119]:
+            playerY = playerY - 1 #distance
+        elif pygame.key.get_pressed()[115]:
+            playerY = playerY + 1 #distance
+
+        if pygame.time.get_ticks() - lastSpeedUp >= 1000: #Can be slowed by boosts
+            lastSpeedUp = pygame.time.get_ticks()
+            speed = speed + 0.1 #Can be slowed by boosts too, maybe.
     # --- Debug ---
     if showDebug == True:
-        debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64
+        debug = speed
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
