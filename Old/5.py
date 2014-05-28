@@ -1,3 +1,5 @@
+HIT = False
+
 """
 TODO:
 
@@ -282,17 +284,14 @@ class Warp(object):
 class MapSlice(object):
     def __init__(self, position):
         self.position = position
-        self.noBlock = random.randint(0, 1)
-        if self.noBlock == 0:
-            self.blockade = random.choice(blockadeList)
-            self.blockade = [self.blockade, random.randint(2, 12 - self.blockade.height)]
+        self.blockade = random.choice(blockadeList)
+        self.blockade = [self.blockade, random.randint(2, 12 - self.blockade.height)]
+        #self.blockade[0].hitbox = pygame.Rect(self.position, self.blockade[1] * 64, self.blockade[0].height * 64, self.blockade[0].height * 64)
     def update(self):
+        self.blockade[0].hitbox = pygame.Rect(self.position, self.blockade[1] * 64, self.blockade[0].height * 64, self.blockade[0].height * 64)
         windowSurface.blit(endGameBg, (self.position, 0))
-        
-        if self.noBlock == 0:
-            windowSurface.blit(self.blockade[0].picture, (self.position, self.blockade[1] * 64))
-            self.blockade[0].hitbox = pygame.Rect(self.position, self.blockade[1] * 64, self.blockade[0].height * 64, self.blockade[0].height * 64)
-            pygame.draw.rect(windowSurface, GREEN, self.blockade[0].hitbox) #debugging
+        windowSurface.blit(self.blockade[0].picture, (self.position, self.blockade[1] * 64))
+        pygame.draw.rect(windowSurface, GREEN, self.blockade[0].hitbox) #debugging
         self.position = self.position - distance(speed, frameTime)
 
 class Blockade(object):
@@ -345,8 +344,6 @@ playerLocked = False
 
 playerY = 300 #Maybe temporary?
 speed = 0.5
-
-playerDead = False
 
 reverseDirection = [2, 3, 0, 1]
 
@@ -417,7 +414,7 @@ YELLOW = (255, 255, 0)
 
 """GameState system"""
 MENU = 0
-GAMEOVER = 1
+CUTSCENE = 1
 SEARCHPLAY = 2
 RUNPLAY = 3
 PAUSE = 4
@@ -472,8 +469,11 @@ path = os.path.abspath("resources/endgame")
 for blockade in os.listdir(path):
     blkArgs = blockade.split(',')
     print blkArgs
-    if blockade != "default.png":
+    if blockade != "default.png" and blockade != "transparent.png":
         blockadeList.append(Blockade(pygame.image.load("resources/endgame/" + blockade), int(blkArgs[1][0])))
+
+for blockade in range(0, len(blockadeList)):
+    blockadeList.append(Blockade(pygame.image.load("resources/endgame/transparent.png"), 0))
 
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
@@ -613,15 +613,15 @@ while True:
         # TEMP
 
     if GameState == RUNPLAY:
-        playerHitpoint = [196 - 32, int(playerY) + 120]
-        playerDead= False
+        playerHitpoint = [256, playerY]
+        HIT = False
         for slices in mapSlices:
             slices.update()
             if slices.position < -256:
                 del mapSlices[mapSlices.index(slices)]
-            if slices.noBlock == 0:
-                if slices.blockade[0].hitbox.collidepoint(playerHitpoint):
-                    playerDead= True
+            pygame.draw.rect(windowSurface, GREEN, slices.blockade[0].hitbox)
+            if slices.blockade[0].hitbox.collidepoint(playerHitpoint):
+                HIT = True
 
         if len(mapSlices) < 20:
             mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
@@ -650,19 +650,10 @@ while True:
         if escape:
             GameState = PAUSE
             escape = False
-
-        pygame.draw.circle(windowSurface, WHITE, playerHitpoint, 5, 1)
-
-        if playerDead:
-            pygame.draw.circle(windowSurface, RED, playerHitpoint, 50, 10)
-            GameState = GAMEOVER
-
-    if GameState == GAMEOVER:
-        print "HAHAHHAHA JE FAAALT"
             
     # --- Debug ---
     if showDebug == True:
-        debug = 1
+        debug = HIT
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
