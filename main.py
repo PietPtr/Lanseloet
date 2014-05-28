@@ -612,16 +612,18 @@ while True:
 
         if len(mapSlices) < 20:
             mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
-                            
-        windowSurface.blit(directionList[3], (128, playerY))
 
-        #"""
+        runTime = 150
+        if ((pygame.time.get_ticks() - (pygame.time.get_ticks() % runTime)) / runTime) % 2 == 0:
+            windowSurface.blit(directionList[11], (128, playerY))
+        elif ((pygame.time.get_ticks() - (pygame.time.get_ticks() % runTime)) / runTime) % 2 == 1:
+            windowSurface.blit(directionList[7], (128, playerY))
+
         if pygame.key.get_pressed()[119]:
             playerY = playerY - 1 #distance
         elif pygame.key.get_pressed()[115]:
             playerY = playerY + 1 #distance
-        #"""
-        #playerY = pygame.mouse.get_pos()[1]
+
         if playerY <= 64:
             playerY = 64
         elif playerY >= 640:
@@ -630,7 +632,7 @@ while True:
         if pygame.time.get_ticks() - lastSpeedUp >= 1000: #Can be slowed by boosts
             lastSpeedUp = pygame.time.get_ticks()
             if speed < 2.3:
-                speed = speed + 0.01 #Can be slowed by boosts too, maybe.
+                speed = speed + 0.01 #Can be slowed by boosts too, maybe?
 
         if escape:
             GameState = PAUSE
