@@ -36,7 +36,7 @@ def text(text, coords):
     global alphabetPictures
     
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!"]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     index = 0
     for letter in text:
         outputList.append(alphabet.index(text[index]))
@@ -55,7 +55,7 @@ def getTextLength(text):
     textLength = 0
 
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!"]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     count = 0
     for letter in text:
         outputList.append(alphabet.index(text[count]))
@@ -349,6 +349,8 @@ speed = 0.5
 
 playerDead = False
 
+score = 0
+
 reverseDirection = [2, 3, 0, 1]
 
 letterSizeList = []
@@ -410,6 +412,7 @@ for script in os.listdir(path):
                 
 # --- Constants ---
 BLACK = (0, 0, 0)
+GRAY = (80, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 200, 0)
@@ -478,13 +481,13 @@ playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, cha
 B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
 B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS))
-B_quit = Button([720, 367], "SLUIJTEN", lambda:quitGame())
+B_quit = Button([720, 468], "SLUIJTEN", lambda:quitGame())
 
 B_yes = Button([608 - 469, 367], "JA", lambda:yes())
 B_no = Button([608 + 5, 367], "NEEN", lambda:no())
 
-B_continue = Button([720, 165], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
-B_menu = Button([720, 266], "MENU", lambda:changeGameState(MENU))
+B_continue = Button([720, 266], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
+B_menu = Button([720, 367], "MENU", lambda:changeGameState(MENU))
 
 # --- Main loop ---
 while True:
@@ -605,6 +608,7 @@ while True:
         if playerChar.nextPosition == [64, 64]:
             lastSpeedUp = pygame.time.get_ticks()
             GameState = RUNPLAY
+            scoreStart = pygame.time.get_ticks()
             for i in range(0, 20):
                 mapSlices.append(MapSlice(i * 128, 1)) 
         # TEMP
@@ -649,11 +653,18 @@ while True:
             escape = False
 
         if playerDead:
+            scoreEnd = pygame.time.get_ticks()
+            score = scoreEnd - scoreStart
             GameState = GAMEOVER
 
     if GameState == GAMEOVER:
-        windowSurface.fill(BLACK)
+        windowSurface.fill(GRAY)
         text("GAME OVER", [1216 / 2 - int(getTextLength("GAME OVER")) / 2, 200])
+        text("JE HEBT " + str(score / 1000) + " SECONDEN OVERLEEFT.", [1216 / 2 - int(getTextLength("JE HEBT " + str(score / 1000) + " SECONDEN OVERLEEFT.")) / 2, 250])
+
+        B_menu.doTasks()
+        B_quit.doTasks()
+        
         for slices in mapSlices:
             slices.update()
             if slices.position < -256:
