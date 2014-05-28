@@ -17,7 +17,7 @@ defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True] #position [x, y, Cham
 def distance(speed, time):
     distance = time * speed
     return distance
-5
+
 """font"""
 def loadFont():
     global alphabetPictures
