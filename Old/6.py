@@ -280,9 +280,9 @@ class Warp(object):
         self.destinationID = destinationID
         
 class MapSlice(object):
-    def __init__(self, position, noBlock):
+    def __init__(self, position):
         self.position = position
-        self.noBlock = noBlock
+        self.noBlock = random.randint(0, 1)
         if self.noBlock == 0:
             self.blockade = random.choice(blockadeList)
             self.blockade = [self.blockade, random.randint(2, 12 - self.blockade.height)]
@@ -292,7 +292,7 @@ class MapSlice(object):
         if self.noBlock == 0:
             windowSurface.blit(self.blockade[0].picture, (self.position, self.blockade[1] * 64))
             self.blockade[0].hitbox = pygame.Rect(self.position, self.blockade[1] * 64, self.blockade[0].height * 64, self.blockade[0].height * 64)
-            #pygame.draw.rect(windowSurface, GREEN, self.blockade[0].hitbox) #debugging
+            pygame.draw.rect(windowSurface, GREEN, self.blockade[0].hitbox) #debugging
         self.position = self.position - distance(speed, frameTime)
 
 class Blockade(object):
@@ -606,7 +606,7 @@ while True:
             lastSpeedUp = pygame.time.get_ticks()
             GameState = RUNPLAY
             for i in range(0, 20):
-                mapSlices.append(MapSlice(i * 128, 1)) 
+                mapSlices.append(MapSlice(i * 128)) 
         # TEMP
 
     if GameState == RUNPLAY:
@@ -621,7 +621,7 @@ while True:
                     playerDead= True
 
         if len(mapSlices) < 20:
-            mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128, random.randint(0, 1)))
+            mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
 
         runTime = 150
         if ((pygame.time.get_ticks() - (pygame.time.get_ticks() % runTime)) / runTime) % 2 == 0:
@@ -650,10 +650,10 @@ while True:
 
         if playerDead:
             GameState = GAMEOVER
+            for i in range(0, 30):
+                mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
 
     if GameState == GAMEOVER:
-        windowSurface.fill(BLACK)
-        text("GAME OVER", [1216 / 2 - int(getTextLength("GAME OVER")) / 2, 200])
         for slices in mapSlices:
             slices.update()
             if slices.position < -256:
@@ -661,9 +661,6 @@ while True:
 
         playerX = playerX - distance(speed, frameTime)
         windowSurface.blit(directionList[12], (playerX, playerY + 64))
-
-        if playerX < -1024:
-            pass#windowSurface.fill(BLACK)
             
     # --- Debug ---
     if showDebug == True:
