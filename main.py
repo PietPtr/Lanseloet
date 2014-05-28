@@ -282,15 +282,11 @@ class Warp(object):
 class MapSlice(object):
     def __init__(self, position):
         self.position = position
-        self.blockade = random.choice([blockadeList])
-    """
-    does:
-    rendering of the maps + blockades
-    updates position according to current player speed
-    probably some other stuff I dont know right now.
-    """
+        self.blockade = random.choice(blockadeList)
+        self.blockade = [self.blockade, random.randint(2, 12 - self.blockade.height)]
     def update(self):
         windowSurface.blit(endGameBg, (self.position, 0))
+        windowSurface.blit(self.blockade[0].picture, (self.position, self.blockade[1] * 64))
         self.position = self.position - speed #distance
 
 class Blockade(object):
@@ -339,7 +335,7 @@ escape = False
 playerLocked = False
 
 playerY = 300 #Maybe temporary?
-speed = 1.3
+speed = 0.5
 
 reverseDirection = [2, 3, 0, 1]
 
@@ -464,8 +460,12 @@ mapSlices = []
 path = os.path.abspath("resources/endgame")
 for blockade in os.listdir(path):
     blkArgs = blockade.split(',')
-    if blockade != "default.png":
-        blockadeList.append(Blockade(pygame.image.load("resources/endgame/" + blockade), int(blkArgs[1][0]))) #<- only gonna use 10 objects..?
+    print blkArgs
+    if blockade != "default.png" and blockade != "transparent.png":
+        blockadeList.append(Blockade(pygame.image.load("resources/endgame/" + blockade), int(blkArgs[1][0])))
+
+for blockade in range(0, len(blockadeList)):
+    blockadeList.append(Blockade(pygame.image.load("resources/endgame/transparent.png"), 0))
 
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
@@ -600,9 +600,8 @@ while True:
         if playerChar.nextPosition == [64, 64]:
             lastSpeedUp = pygame.time.get_ticks()
             GameState = RUNPLAY
-            for i in range(0, 10):
-                mapSlices.append(MapSlice(i * 128))
-                
+            for i in range(0, 20):
+                mapSlices.append(MapSlice(i * 128)) 
         # TEMP
 
     if GameState == RUNPLAY:
@@ -611,22 +610,34 @@ while True:
             if slices.position < -256:
                 del mapSlices[mapSlices.index(slices)]
 
-        if len(mapSlices) < 12:
+        if len(mapSlices) < 20:
             mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128))
                             
         windowSurface.blit(directionList[3], (128, playerY))
 
+        #"""
         if pygame.key.get_pressed()[119]:
             playerY = playerY - 1 #distance
         elif pygame.key.get_pressed()[115]:
             playerY = playerY + 1 #distance
+        #"""
+        #playerY = pygame.mouse.get_pos()[1]
+        if playerY <= 64:
+            playerY = 64
+        elif playerY >= 640:
+            playerY = 640
 
         if pygame.time.get_ticks() - lastSpeedUp >= 1000: #Can be slowed by boosts
             lastSpeedUp = pygame.time.get_ticks()
-            speed = speed + 0.01 #Can be slowed by boosts too, maybe.
+            if speed < 2.3:
+                speed = speed + 0.01 #Can be slowed by boosts too, maybe.
+
+        if escape:
+            GameState = PAUSE
+            escape = False
     # --- Debug ---
     if showDebug == True:
-        debug = speed
+        debug = playerY
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
