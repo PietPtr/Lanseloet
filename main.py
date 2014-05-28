@@ -659,8 +659,8 @@ while True:
 
     if GameState == GAMEOVER:
         windowSurface.fill(GRAY)
-        text("GAME OVER", [1216 / 2 - int(getTextLength("GAME OVER")) / 2, 200])
-        text("JE HEBT " + str(score / 1000) + " SECONDEN OVERLEEFT.", [1216 / 2 - int(getTextLength("JE HEBT " + str(score / 1000) + " SECONDEN OVERLEEFT.")) / 2, 250])
+        text("EILAAS, SPEL VOREBEI", [1216 / 2 - int(getTextLength("EILAAS, SPEL VOREBEI")) / 2, 200])
+        text("GIJ HEBT " + str(score / 1000) + " SEKONDEN OVERLEEFT.", [1216 / 2 - int(getTextLength("GIJ HEBT " + str(score / 1000) + " SEKONDEN OVERLEEFT.")) / 2, 250])
 
         B_menu.doTasks()
         B_quit.doTasks()
