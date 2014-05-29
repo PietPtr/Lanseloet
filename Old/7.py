@@ -92,8 +92,6 @@ def resetSaveState():
     showDebug = saveState[4]
     playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
 
-    saveAll()
-
 
 """Button functions"""
 def newGame():
@@ -348,7 +346,7 @@ playerLocked = False
 playerY = 300 #Maybe temporary?
 playerX = 128
 speed = 0.5
-lives = 1
+lives = 3
 playerHit = 0
 
 playerDead = False
@@ -495,6 +493,10 @@ B_no = Button([608 + 5, 367], "NEEN", lambda:no())
 B_continue = Button([720, 266], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY, None))
 B_menu = Button([720, 367], "MENU", lambda:changeGameState(MENU, "MENU.wav"))
 
+"""creates lists for all possible map slices for smoother running"""
+for i in blockadeList:
+    print i.height
+
 # --- Main loop ---
 while True:
     # --- Variables outside gamestate ---
@@ -535,13 +537,9 @@ while True:
         B_new.doTasks()
         B_options.doTasks()
         B_quit.doTasks()
-
-    # --- Settings --- 
     if GameState == OPTIONS:
         windowSurface.blit(menuBg, (0, 0))
         B_menu.doTasks()
-
-    # --- Starting a new game ---
     if GameState == NEWGAME:
         windowSurface.blit(menuBg, (0, 0))
         if saveState != defaultSaveState:
@@ -618,18 +616,14 @@ while True:
             GameState = PAUSE
             escape = False
 
-        # --- Changing to end-game ---
-        if playerChar.nextPosition == [64, 64]: #temp
+        # TEMP
+        if playerChar.nextPosition == [64, 64]:
             lastSpeedUp = pygame.time.get_ticks()
             changeGameState(RUNPLAY, "RUN.mp3")
             scoreStart = pygame.time.get_ticks()
-            mapSlices = []
             for i in range(0, 20):
-                mapSlices.append(MapSlice(i * 128, 1))
-
-            playerY = 300
-            playerX = 128
-            lives = 1
+                mapSlices.append(MapSlice(i * 128, 1)) 
+        # TEMP
 
     # --- Fleeing for Lanseloet --- 
     if GameState == RUNPLAY:
@@ -689,7 +683,6 @@ while True:
         if lives <= 0:
             scoreEnd = pygame.time.get_ticks()
             score = scoreEnd - scoreStart
-            resetSaveState()
             GameState = GAMEOVER
 
         # --- blit lives ---

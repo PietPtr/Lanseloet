@@ -1,5 +1,5 @@
-pics|lanseloet/up.png|lanseloet/left.png|lanseloet/down.png|lanseloet/right.png
-position|1|3|2|2
+pics|lanseloet/up.png|lanseloet/left.png|mother/down.png|lanseloet/right.png
+position|1|3|2|3
 walk|1|0
 walk|2|2
 playsound|0
