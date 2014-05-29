@@ -1,4 +1,3 @@
-frameTimes = []
 """
 TODO:
 
@@ -334,6 +333,7 @@ loopTrack = 0
 lastPress = 0
 
 playerHitpoint = []
+frameTimes = []
 
 clicked = False
 screenshot = False
