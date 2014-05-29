@@ -638,9 +638,9 @@ while True:
         if playerHit == 0:
             transparentOrNot = 11
         elif playerHit != 0:
-            if pygame.time.get_ticks() - playerHit < 3000:
+            if pygame.time.get_ticks() - playerHit < 1500:
                 transparentOrNot = 13
-            elif pygame.time.get_ticks() - playerHit >= 3000:
+            elif pygame.time.get_ticks() - playerHit >= 1500:
                 playerHit = 0
 
         # --- fill up map ---
