@@ -1,3 +1,4 @@
+frameTimes = []
 """
 TODO:
 
@@ -36,7 +37,7 @@ def text(text, coords):
     global alphabetPictures
     
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":"]
     index = 0
     for letter in text:
         outputList.append(alphabet.index(text[index]))
@@ -55,7 +56,7 @@ def getTextLength(text):
     textLength = 0
 
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":"]
     count = 0
     for letter in text:
         outputList.append(alphabet.index(text[count]))
@@ -497,6 +498,8 @@ while True:
     currentTime = pygame.time.get_ticks()
     mousePosition = pygame.mouse.get_pos()
     loopTrack = loopTrack + 1
+
+    
     
     # --- Events --- 
     pygame.display.update()
@@ -514,6 +517,7 @@ while True:
             if event.button == 1:
                 clicked = True
         if event.type == QUIT:
+            print frameTimes
             saveAll()
             pygame.quit()
             sys.exit()
@@ -624,7 +628,7 @@ while True:
                 if slices.blockade[0].hitbox.collidepoint(playerHitpoint):
                     playerDead= True
 
-        if len(mapSlices) < 20:
+        if len(mapSlices) < 16:
             mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128, random.randint(0, 1)))
 
         runTime = 150
@@ -657,6 +661,9 @@ while True:
             score = scoreEnd - scoreStart
             GameState = GAMEOVER
 
+        scoreText = "SCORE: " + str((pygame.time.get_ticks() / 1000) - scoreStart / 1000)
+        text(scoreText, [1216 - getTextLength(scoreText), 728])
+
     if GameState == GAMEOVER:
         windowSurface.fill(GRAY)
         text("EILAAS, SPEL VOREBEI", [1216 / 2 - int(getTextLength("EILAAS, SPEL VOREBEI")) / 2, 200])
@@ -672,15 +679,16 @@ while True:
 
         playerX = playerX - distance(speed, frameTime)
         windowSurface.blit(directionList[12], (playerX, playerY + 64))
-
-        if playerX < -1024:
-            pass#windowSurface.fill(BLACK)
             
     # --- Debug ---
     if showDebug == True:
-        debug = 1
+        try:
+            debug = pygame.time.get_ticks() / 1000
+        except NameError:
+            debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
+        
 
     # --- Run outside GameState system ---
     """"Reset variables"""
@@ -688,6 +696,8 @@ while True:
 
     if GameState != SEARCHPLAY:
         escape = False
+
+    frameTimes.append(frameTime)
 
     """Screenshot"""
     if screenshot == True:
