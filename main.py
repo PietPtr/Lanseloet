@@ -103,9 +103,12 @@ def quitGame():
     pygame.quit()
     sys.exit()
     
-def changeGameState(newState):
+def changeGameState(newState, song):
     global GameState
     GameState = newState
+    if song != None:
+        pygame.mixer.music.load("sounds/" + song)
+        pygame.mixer.music.play(-1, 0)
 
 def yes():
     return True
@@ -326,14 +329,10 @@ loadAll()
 
 showDebug = saveState[4]
 
-playerPos = [saveState[0][0], saveState[0][1]]
-nextPlayerPos = [saveState[0][0], saveState[0][1]]
-
 loopTrack = 0
 lastPress = 0
 
 playerHitpoint = []
-frameTimes = []
 
 clicked = False
 screenshot = False
@@ -347,6 +346,8 @@ playerLocked = False
 playerY = 300 #Maybe temporary?
 playerX = 128
 speed = 0.5
+lives = 3
+playerHit = 0
 
 playerDead = False
 
@@ -443,7 +444,8 @@ directionList = [pygame.image.load('resources/sandrijn/up.png'),
                  pygame.image.load('resources/sandrijn/leftr.png'),
                  pygame.image.load('resources/sandrijn/downr.png'),
                  pygame.image.load('resources/sandrijn/rightr.png'),
-                 pygame.image.load('resources/sandrijn/fell.png')] 
+                 pygame.image.load('resources/sandrijn/fell.png'),
+                 pygame.image.load('resources/sandrijn/nothing.png')]
 
 player = directionList[5]
 
@@ -452,14 +454,15 @@ tile = pygame.image.load('resources/tile.png')
 menuBg = pygame.image.load('resources/background.png')
 pauseBg = pygame.image.load('resources/pause.png')
 
-chamber0 = pygame.image.load('resources/chamber0.png')
+lifePic = pygame.image.load('resources/life.png')
 
 soundList = []
 for i in range(0, 999):
     soundList.append(None)
 
-menuMusic = pygame.mixer.music.load('sounds/menuMusic.wav')
-#pygame.mixer.music.play(-1, 0.0)
+pygame.mixer.music.load('sounds/MENU.wav')
+
+pygame.mixer.music.play(-1, 0.0)
 
 path = os.path.abspath("sounds/voices")
 for voice in os.listdir(path):
@@ -479,16 +482,16 @@ for blockade in os.listdir(path):
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
 
-B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
-B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME))
-B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS))
+B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY, "SEARCH.mp3"))
+B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME, None))
+B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS, None))
 B_quit = Button([720, 468], "SLUIJTEN", lambda:quitGame())
 
 B_yes = Button([608 - 469, 367], "JA", lambda:yes())
 B_no = Button([608 + 5, 367], "NEEN", lambda:no())
 
-B_continue = Button([720, 266], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY))
-B_menu = Button([720, 367], "MENU", lambda:changeGameState(MENU))
+B_continue = Button([720, 266], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY, None))
+B_menu = Button([720, 367], "MENU", lambda:changeGameState(MENU, "MENU.wav"))
 
 # --- Main loop ---
 while True:
@@ -499,7 +502,8 @@ while True:
     mousePosition = pygame.mouse.get_pos()
     loopTrack = loopTrack + 1
 
-    
+    if frameTime > 100:
+        frameTime = 2
     
     # --- Events --- 
     pygame.display.update()
@@ -517,7 +521,6 @@ while True:
             if event.button == 1:
                 clicked = True
         if event.type == QUIT:
-            print frameTimes
             saveAll()
             pygame.quit()
             sys.exit()
@@ -546,12 +549,12 @@ while True:
             if B_yes.doTasks() == True:
                 os.remove("sav.sav")
                 resetSaveState()
-                GameState = SEARCHPLAY
+                changeGameState(SEARCHPLAY, "SEARCH.mp3")
             elif B_no.doTasks() == True:
                 GameState = MENU
         elif saveState == defaultSaveState:
             saveState = defaultSaveState
-            GameState = SEARCHPLAY
+            changeGameState(SEARCHPLAY, "SEARCH.mp3")
     
     if GameState == PAUSE:
         windowSurface.blit(pauseBg, (0, 0))
@@ -559,9 +562,10 @@ while True:
         B_quit.doTasks()
         if B_menu.doTasks():
             saveAll()
-            
+
+    # --- walking through the house searching for boosts ---
     if GameState == SEARCHPLAY:
-        # --- first blit/fill ---
+        # --- blit images ---
         windowSurface.fill(BLACK)
         playerChar.currentChamber.render()
 
@@ -611,29 +615,42 @@ while True:
         # TEMP
         if playerChar.nextPosition == [64, 64]:
             lastSpeedUp = pygame.time.get_ticks()
-            GameState = RUNPLAY
+            changeGameState(RUNPLAY, "RUN.mp3")
             scoreStart = pygame.time.get_ticks()
             for i in range(0, 20):
                 mapSlices.append(MapSlice(i * 128, 1)) 
         # TEMP
 
+    # --- Fleeing for Lanseloet --- 
     if GameState == RUNPLAY:
+        # --- create full map ---
         playerHitpoint = [196 - 32, int(playerY) + 120]
-        playerDead= False
+        playerDead = False
         for slices in mapSlices:
             slices.update()
             if slices.position < -256:
                 del mapSlices[mapSlices.index(slices)]
             if slices.noBlock == 0:
-                if slices.blockade[0].hitbox.collidepoint(playerHitpoint):
-                    playerDead= True
+                if slices.blockade[0].hitbox.collidepoint(playerHitpoint) and playerHit == 0:
+                    lives = lives - 1
+                    playerHit = pygame.time.get_ticks()
 
+        if playerHit == 0:
+            transparentOrNot = 11
+        elif playerHit != 0:
+            if pygame.time.get_ticks() - playerHit < 3000:
+                transparentOrNot = 13
+            elif pygame.time.get_ticks() - playerHit >= 3000:
+                playerHit = 0
+
+        # --- fill up map ---
         if len(mapSlices) < 16:
             mapSlices.append(MapSlice(mapSlices[len(mapSlices) - 1].position + 128, random.randint(0, 1)))
 
+        # --- blit player ---
         runTime = 150
         if ((pygame.time.get_ticks() - (pygame.time.get_ticks() % runTime)) / runTime) % 2 == 0:
-            windowSurface.blit(directionList[11], (128, playerY))
+            windowSurface.blit(directionList[transparentOrNot], (128, playerY))
         elif ((pygame.time.get_ticks() - (pygame.time.get_ticks() % runTime)) / runTime) % 2 == 1:
             windowSurface.blit(directionList[7], (128, playerY))
 
@@ -647,43 +664,54 @@ while True:
         elif playerY >= 640:
             playerY = 640
 
+        # --- Speed up ---
         if pygame.time.get_ticks() - lastSpeedUp >= 1000: #Can be slowed by boosts
             lastSpeedUp = pygame.time.get_ticks()
-            if speed < 2.3:
+            if speed < 1.3:
                 speed = speed + 0.01 #Can be slowed by boosts too, maybe?
 
+        # --- Pause menu ---
         if escape:
             GameState = PAUSE
             escape = False
 
-        if playerDead:
+        # --- Start gameover gamestate            
+        if lives <= 0:
             scoreEnd = pygame.time.get_ticks()
             score = scoreEnd - scoreStart
             GameState = GAMEOVER
 
+        # --- blit lives ---
+        for life in range(0, lives):
+            windowSurface.blit(lifePic, (life * 32 + 2, 768 - 50))
+
+        # --- Score ---
         scoreText = "SCORE: " + str((pygame.time.get_ticks() / 1000) - scoreStart / 1000)
         text(scoreText, [1216 - getTextLength(scoreText), 728])
 
     if GameState == GAMEOVER:
+        # --- Background ---
         windowSurface.fill(GRAY)
         text("EILAAS, SPEL VOREBEI", [1216 / 2 - int(getTextLength("EILAAS, SPEL VOREBEI")) / 2, 200])
         text("GIJ HEBT " + str(score / 1000) + " SEKONDEN OVERLEEFT.", [1216 / 2 - int(getTextLength("GIJ HEBT " + str(score / 1000) + " SEKONDEN OVERLEEFT.")) / 2, 250])
 
         B_menu.doTasks()
         B_quit.doTasks()
-        
+
+        # --- Clear map ---
         for slices in mapSlices:
             slices.update()
             if slices.position < -256:
                 del mapSlices[mapSlices.index(slices)]
 
+        # --- Fallen player
         playerX = playerX - distance(speed, frameTime)
         windowSurface.blit(directionList[12], (playerX, playerY + 64))
             
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = pygame.time.get_ticks() / 1000
+            debug = pygame.time.get_ticks() / 1000, playerHit, speed, lives
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
@@ -696,8 +724,6 @@ while True:
 
     if GameState != SEARCHPLAY:
         escape = False
-
-    frameTimes.append(frameTime)
 
     """Screenshot"""
     if screenshot == True:
