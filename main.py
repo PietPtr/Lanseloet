@@ -1,12 +1,19 @@
 """
 TODO:
 
-pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
-position|4|1|2|0   X:4 Y:1 direction facing: 2 (down) in chamber0
-trigger|4|2        trigger tile 0 is at X:4 Y:2
-trigger|3|1        trigger tile 1 is at X:3 Y:1
-walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
-                   only go to next command when the previous one is finished.
+event script example:
+    pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
+    position|4|1|2|0   X:4 Y:1 direction facing: 2 (down) in chamber0
+    trigger|4|2        trigger tile 0 is at X:4 Y:2
+    trigger|3|1        trigger tile 1 is at X:3 Y:1
+    walk|4|3           when triggered, start with the walk command: walk 4 blocks to direction 3 (right)
+                       only go to next command when the previous one is finished.
+
+boost script example:
+pic|chest.png       Picture to use
+position|17|1|0     X: 17, Y: 1 in chamber0
+boost|0|0.1         Boost[0] + 0.1 | [0] = speed (maxSpeed - 0.1 in this case), [1] = amount of objects (2 (50% or 1/2) default), [2] = lives
+message|some text   Not sure if this will be used
 """
 import pygame, sys, os, pickle, csv, random
 from pygame.locals import *
@@ -30,6 +37,7 @@ def startRunning():
     playerY = 300
     playerX = 128
     lives = LIVES
+    
 """font"""
 def loadFont():
     global alphabetPictures
@@ -339,7 +347,30 @@ class Blockade(object):
         self.height = height
         self.position = random.randint(2, 11)
         self.hitbox = None
-        
+
+class Boost(object):
+    def __init__(self, position, picture, boost, currentChamber):
+        self.position = position
+        self.picture = pygame.image.load("resources/boosts/" + picture)
+        self.boost = boost
+        self.currentChamber = currentChamber
+        self.triggerList = []
+        for direction in range(0, 4):
+            if direction == 0:
+                self.triggerList.append([self.position[0], self.position[1] - 1, 2])
+            elif direction == 1:
+                self.triggerList.append([self.position[0] - 1, self.position[1], 3])
+            elif direction == 2:
+                self.triggerList.append([self.position[0], self.position[1] + 1, 0])
+            elif direction == 3:
+                self.triggerList.append([self.position[0] + 1, self.position[1], 1])
+    def update(self):
+        if playerChar.currentChamber == self.currentChamber:
+            windowSurface.blit(self.picture, (self.position[0] * 64, self.position[1] * 64))
+            for triggerTile in self.triggerList:
+                if (playerChar.position[0] == triggerTile[0] * 64 and playerChar.position[1] == triggerTile[1] * 64) and (playerChar.direction == triggerTile[2]):
+                    print "Boost activation and variable changing here"
+  
 # --- Set up ---
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
 
@@ -379,6 +410,7 @@ grid = False
 commandsLeft = False
 
 escape = False
+enter = False
 playerLocked = False
 
 playerY = 300 #Maybe temporary?
@@ -449,7 +481,9 @@ for script in os.listdir(path):
                 eventTrigger.append([eventPosition[0], eventPosition[1] + 64])
 
             eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
-                
+
+boost = Boost([17, 1], "chest.png", [1, 0.1], chamberList[0])
+
 # --- Constants ---
 BLACK = (0, 0, 0)
 GRAY = (80, 0, 0)
@@ -609,6 +643,7 @@ while True:
         # --- blit images ---
         windowSurface.fill(BLACK)
         playerChar.currentChamber.render()
+        boost.update()
 
         for event in eventList:
             event.updateAnimation()
@@ -757,7 +792,7 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = playerLocked
+            debug = playerChar.currentChamber
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
@@ -770,6 +805,8 @@ while True:
 
     if GameState != SEARCHPLAY:
         escape = False
+    else:
+        enter = False
 
     if GameState == SEARCHPLAY or GameState == RUNPLAY:
         pygame.mouse.set_visible(False)
