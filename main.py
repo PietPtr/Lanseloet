@@ -14,10 +14,22 @@ from pygame.locals import *
 defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 
 # --- Functions ---
+"""Others"""
 def distance(speed, time):
     distance = time * speed
     return distance
 
+def startRunning():
+    global lastSpeedUp, scoreStart, mapSlices, playerY, playerX, lives
+    
+    lastSpeedUp = pygame.time.get_ticks()
+    changeGameState(RUNPLAY, "RUN.wav")
+    scoreStart = pygame.time.get_ticks()
+    for i in range(0, 20):
+        mapSlices.append(MapSlice(i * 128, 1))
+    playerY = 300
+    playerX = 128
+    lives = LIVES
 """font"""
 def loadFont():
     global alphabetPictures
@@ -94,7 +106,6 @@ def resetSaveState():
 
     saveAll()
 
-
 """Button functions"""
 def newGame():
     newGame = True
@@ -109,6 +120,7 @@ def changeGameState(newState, song):
     global GameState
     GameState = newState
     if song != None:
+        pygame.mixer.music.fadeout(100)
         pygame.mixer.music.load("sounds/" + song)
         pygame.mixer.music.play(-1, 0)
 
@@ -213,6 +225,12 @@ class Character(object):
 
             elif self.commandArgs[0] == "playsound" and pygame.mixer.get_busy() == 0:
                 soundList[int(self.commandArgs[1])].play()
+                self.commandList[self.cmdCount] = ["DONE"]
+                self.lastCmdTime = pygame.time.get_ticks()
+                break
+
+            elif self.commandArgs[0] == "endgame":
+                startRunning()
                 self.commandList[self.cmdCount] = ["DONE"]
                 self.lastCmdTime = pygame.time.get_ticks()
                 break
@@ -325,6 +343,8 @@ loadFont()
 
 # --- Other variables ---
 
+LIVES = 1 #whoops early constant
+
 #saveState = [[3, 1, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 saveState = None
 loadAll()
@@ -348,7 +368,7 @@ playerLocked = False
 playerY = 300 #Maybe temporary?
 playerX = 128
 speed = 0.5
-lives = 1
+lives = LIVES
 playerHit = 0
 
 playerDead = False
@@ -484,7 +504,7 @@ for blockade in os.listdir(path):
 # --- Objects ---
 playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[saveState[0][2]], None, [])
 
-B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY, "SEARCH.mp3"))
+B_start = Button([720, 64], "VERDER GAEN", lambda:changeGameState(SEARCHPLAY, "SEARCH.wav"))
 B_new = Button([720, 165], "NIEWE SPEL", lambda:changeGameState(NEWGAME, None))
 B_options = Button([720, 266], "MOGELIJCHEDE", lambda:changeGameState(OPTIONS, None))
 B_quit = Button([720, 468], "SLUIJTEN", lambda:quitGame())
@@ -555,12 +575,12 @@ while True:
             if B_yes.doTasks() == True:
                 os.remove("sav.sav")
                 resetSaveState()
-                changeGameState(SEARCHPLAY, "SEARCH.mp3")
+                changeGameState(SEARCHPLAY, "SEARCH.wav")
             elif B_no.doTasks() == True:
                 GameState = MENU
         elif saveState == defaultSaveState:
             saveState = defaultSaveState
-            changeGameState(SEARCHPLAY, "SEARCH.mp3")
+            changeGameState(SEARCHPLAY, "SEARCH.wav")
     
     if GameState == PAUSE:
         windowSurface.blit(pauseBg, (0, 0))
@@ -620,16 +640,7 @@ while True:
 
         # --- Changing to end-game ---
         if playerChar.nextPosition == [64, 64]: #temp
-            lastSpeedUp = pygame.time.get_ticks()
-            changeGameState(RUNPLAY, "RUN.mp3")
-            scoreStart = pygame.time.get_ticks()
-            mapSlices = []
-            for i in range(0, 20):
-                mapSlices.append(MapSlice(i * 128, 1))
-
-            playerY = 300
-            playerX = 128
-            lives = 1
+            startRunning()
 
     # --- Fleeing for Lanseloet --- 
     if GameState == RUNPLAY:
@@ -722,7 +733,7 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = pygame.time.get_ticks() / 1000, playerHit, speed, lives
+            debug = playerLocked
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
