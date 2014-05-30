@@ -76,6 +76,21 @@ def getTextLength(text):
 
     return textLength
 
+"""Check event position"""
+def getEventPosition(playerPos):
+    eventAtPlayer = False
+    
+    for event in eventList:
+        if event.currentChamber == playerChar.currentChamber:
+            if event.position == playerPos:
+                eventAtPlayer = True
+                break
+            else:
+                eventAtPlayer = False
+
+    return eventAtPlayer
+            
+
 """saveState"""
 def saveAll():
     global showDebug
@@ -169,13 +184,13 @@ class Character(object):
     def move(self, direction):
         self.direction = direction
         if self.animationRunning == False:
-            if self.direction == 0 and self.currentChamber.walls([self.nextPosition[0], self.nextPosition[1] - 64]) == False:
+            if self.direction == 0 and self.currentChamber.walls([self.nextPosition[0], self.nextPosition[1] - 64]) == False and getEventPosition([self.nextPosition[0], self.nextPosition[1] - 64]) == False:
                 self.nextPosition[1] = self.nextPosition[1] - 64
-            elif self.direction == 1 and self.currentChamber.walls([self.nextPosition[0] - 64, self.nextPosition[1]]) == False:
+            elif self.direction == 1 and self.currentChamber.walls([self.nextPosition[0] - 64, self.nextPosition[1]]) == False and getEventPosition([self.nextPosition[0] - 64, self.nextPosition[1]]) == False:
                 self.nextPosition[0] = self.nextPosition[0] - 64
-            elif self.direction == 2 and self.currentChamber.walls([self.nextPosition[0], self.nextPosition[1] + 64]) == False:
+            elif self.direction == 2 and self.currentChamber.walls([self.nextPosition[0], self.nextPosition[1] + 64]) == False and getEventPosition([self.nextPosition[0], self.nextPosition[1] + 64]) == False:
                 self.nextPosition[1] = self.nextPosition[1] + 64
-            elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[0] + 64, self.nextPosition[1]]) == False:
+            elif self.direction == 3 and self.currentChamber.walls([self.nextPosition[0] + 64, self.nextPosition[1]]) == False and getEventPosition([self.nextPosition[0] + 64, self.nextPosition[1]]) == False:
                 self.nextPosition[0] = self.nextPosition[0] + 64
         self.warped = False
         
@@ -343,7 +358,7 @@ loadFont()
 
 # --- Other variables ---
 
-LIVES = 1 #whoops early constant
+LIVES = 2 #whoops early constant
 
 #saveState = [[3, 1, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 saveState = None
@@ -641,6 +656,7 @@ while True:
         # --- Changing to end-game ---
         if playerChar.nextPosition == [64, 64]: #temp
             startRunning()
+            musicStarted = False
 
     # --- Fleeing for Lanseloet --- 
     if GameState == RUNPLAY:
@@ -691,6 +707,14 @@ while True:
             if speed < 1.3:
                 speed = speed + 0.01 #Can be slowed by boosts too, maybe?
 
+        # --- Change music ---
+        if lives == 1:
+            if musicStarted == False:
+                musicTime = pygame.mixer.music.get_pos()
+                pygame.mixer.music.load("sounds/HURRYRUN.wav")
+                pygame.mixer.music.play(-1, 0)
+                musicStarted = True
+
         # --- Pause menu ---
         if escape:
             GameState = PAUSE
@@ -733,7 +757,7 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = playerLocked
+            debug = pygame.mixer.music.get_pos()
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
