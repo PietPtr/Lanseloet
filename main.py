@@ -345,7 +345,8 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
 
 pygame.init()
 
-windowSurface = pygame.display.set_mode((1216, 768), 0, 32) #always 0 and 32
+#windowSurface = pygame.display.set_mode((1216, 768), pygame.FULLSCREEN, 32) #FULLSCREEN
+windowSurface = pygame.display.set_mode((1216, 768), 0, 32)
 pygame.display.set_caption('Lanceloet van Denemerken')
 
 mainClock = pygame.time.Clock()
@@ -358,7 +359,7 @@ loadFont()
 
 # --- Other variables ---
 
-LIVES = 2 #whoops early constant
+LIVES = 3 #whoops early constant
 
 #saveState = [[3, 1, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 saveState = None
@@ -512,7 +513,6 @@ mapSlices = []
 path = os.path.abspath("resources/endgame")
 for blockade in os.listdir(path):
     blkArgs = blockade.split(',')
-    print blkArgs
     if blockade != "default.png":
         blockadeList.append(Blockade(pygame.image.load("resources/endgame/" + blockade), int(blkArgs[1][0])))
 
@@ -757,7 +757,7 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = pygame.mixer.music.get_pos()
+            debug = playerLocked
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
@@ -770,6 +770,11 @@ while True:
 
     if GameState != SEARCHPLAY:
         escape = False
+
+    if GameState == SEARCHPLAY or GameState == RUNPLAY:
+        pygame.mouse.set_visible(False)
+    else:
+        pygame.mouse.set_visible(True)
 
     """Screenshot"""
     if screenshot == True:
