@@ -386,6 +386,7 @@ class Boost(object):
             for triggerTile in self.triggerList:
                 if (playerChar.position[0] == triggerTile[0] * 64 and playerChar.position[1] == triggerTile[1] * 64) and (playerChar.direction == triggerTile[2]) and pygame.key.get_pressed()[13]:      
                     if self.opened == 0:
+                        soundList[4].play()
                         endGameBoosts[self.boost[0]] += self.boost[1]
                         
                     self.opened = 1
@@ -436,6 +437,7 @@ playerY = 300 #Maybe temporary?
 playerX = 128
 speed = endGameBoosts[1]
 lives = endGameBoosts[2]
+speedUp = endGameBoosts[3]
 playerHit = 0
 
 playerDead = False

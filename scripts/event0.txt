@@ -1,9 +1,10 @@
 pics|lanseloet/up.png|lanseloet/left.png|lanseloet/down.png|lanseloet/right.png
 position|1|3|2|1
+playsound|2
 walk|4|3
 walk|1|0
 walk|5|3
 walk|6|2
 walk|9|1
 walk|0|2
-playsound|0
+playsound|3
