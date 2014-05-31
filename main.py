@@ -432,6 +432,7 @@ for picture in alphabetPictures:
 
 chamberList = []
 eventList = []
+boostList = []
 
 path = os.path.abspath("scripts")
 for script in os.listdir(path):
@@ -483,7 +484,25 @@ for script in os.listdir(path):
 
             eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
 
-boost = Boost([17, 1], ["chest0.png", "chest1.png"], [1, 0.1], chamberList[0])
+for script in os.listdir(path):
+    with open('scripts/' + script, 'rb') as csvscript:
+        scriptReader = csv.reader(csvscript, delimiter=' ', quotechar='"')
+        scriptList = []
+        if script.startswith('boost'):
+            for command in scriptReader:
+                scriptList.append(command)
+
+            for command in scriptList:
+                comArgs = command[0].split("|")
+                if comArgs[0].startswith("pic"):
+                    boostPicture = ["chest0.png", "chest1.png"]
+                elif comArgs[0].startswith("position"):
+                    boostPosition = [int(comArgs[1]), int(comArgs[2]), int(comArgs[3])]
+                elif comArgs[0].startswith("boost"):
+                    boostBoost = [int(comArgs[1]), int(comArgs[2])]
+
+            boostList.append(Boost([boostPosition[0], boostPosition[1]], boostPicture, boostBoost, chamberList[0]))
+            
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -644,7 +663,6 @@ while True:
         # --- blit images ---
         windowSurface.fill(BLACK)
         playerChar.currentChamber.render()
-        boost.update()
 
         for event in eventList:
             event.updateAnimation()
@@ -660,6 +678,9 @@ while True:
                     playerLocked = True
             elif commandsLeft == False:
                 playerLocked = False
+
+        for boost in boostList:
+            boost.update()
 
         playerChar.updateAnimation()
         playerChar.update()
