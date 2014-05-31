@@ -351,9 +351,10 @@ class Blockade(object):
 class Boost(object):
     def __init__(self, position, picture, boost, currentChamber):
         self.position = position
-        self.picture = pygame.image.load("resources/boosts/" + picture)
+        self.picture = [pygame.image.load("resources/boosts/" + picture[0]), pygame.image.load("resources/boosts/" + picture[1])]
         self.boost = boost
         self.currentChamber = currentChamber
+        self.opened = 0
         self.triggerList = []
         for direction in range(0, 4):
             if direction == 0:
@@ -366,10 +367,10 @@ class Boost(object):
                 self.triggerList.append([self.position[0] + 1, self.position[1], 1])
     def update(self):
         if playerChar.currentChamber == self.currentChamber:
-            windowSurface.blit(self.picture, (self.position[0] * 64, self.position[1] * 64))
+            windowSurface.blit(self.picture[self.opened], (self.position[0] * 64, self.position[1] * 64))
             for triggerTile in self.triggerList:
-                if (playerChar.position[0] == triggerTile[0] * 64 and playerChar.position[1] == triggerTile[1] * 64) and (playerChar.direction == triggerTile[2]):
-                    print "Boost activation and variable changing here"
+                if (playerChar.position[0] == triggerTile[0] * 64 and playerChar.position[1] == triggerTile[1] * 64) and (playerChar.direction == triggerTile[2]) and pygame.key.get_pressed()[13]:
+                    self.opened = 1
   
 # --- Set up ---
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
@@ -482,7 +483,7 @@ for script in os.listdir(path):
 
             eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
 
-boost = Boost([17, 1], "chest.png", [1, 0.1], chamberList[0])
+boost = Boost([17, 1], ["chest0.png", "chest1.png"], [1, 0.1], chamberList[0])
 
 # --- Constants ---
 BLACK = (0, 0, 0)
