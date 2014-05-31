@@ -1,5 +1,6 @@
 """
 TODO:
+    Save events and boosts...
 
 event script example:
     pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
@@ -15,6 +16,7 @@ position|17|1|0     X: 17, Y: 1 in chamber0
 boost|0|0.1         Boost[0] + 0.1 | [0] = speed (maxSpeed - 0.1 in this case), [1] = amount of objects (2 (50% or 1/2) default), [2] = lives
 message|some text   Not sure if this will be used
 """
+from __future__ import division
 import pygame, sys, os, pickle, csv, random
 from pygame.locals import *
 
@@ -36,7 +38,9 @@ def startRunning():
         mapSlices.append(MapSlice(i * 128, 1))
     playerY = 300
     playerX = 128
-    lives = LIVES
+    lives = endGameBoosts[2]
+    speed = endGameBoosts[0]
+    speedUp = endGameBoosts[3]
     
 """font"""
 def loadFont():
@@ -95,6 +99,15 @@ def getEventPosition(playerPos):
                 break
             else:
                 eventAtPlayer = False
+
+    if eventAtPlayer == False:
+        for boost in boostList:
+            if boost.currentChamber == playerChar.currentChamber:
+                if boost.position[0] * 64 == playerPos[0] and boost.position[1] * 64 == playerPos[1]:
+                    eventAtPlayer = True
+                    break
+                else:
+                    eventAtPlayer = False
 
     return eventAtPlayer
             
@@ -366,10 +379,15 @@ class Boost(object):
             elif direction == 3:
                 self.triggerList.append([self.position[0] + 1, self.position[1], 1])
     def update(self):
+        global endGameBoosts
+        
         if playerChar.currentChamber == self.currentChamber:
             windowSurface.blit(self.picture[self.opened], (self.position[0] * 64, self.position[1] * 64))
             for triggerTile in self.triggerList:
-                if (playerChar.position[0] == triggerTile[0] * 64 and playerChar.position[1] == triggerTile[1] * 64) and (playerChar.direction == triggerTile[2]) and pygame.key.get_pressed()[13]:
+                if (playerChar.position[0] == triggerTile[0] * 64 and playerChar.position[1] == triggerTile[1] * 64) and (playerChar.direction == triggerTile[2]) and pygame.key.get_pressed()[13]:      
+                    if self.opened == 0:
+                        endGameBoosts[self.boost[0]] += self.boost[1]
+                        
                     self.opened = 1
   
 # --- Set up ---
@@ -391,7 +409,7 @@ loadFont()
 
 # --- Other variables ---
 
-LIVES = 3 #whoops early constant
+endGameBoosts = [2, 1, 2, 500] #max speed, startSpeed, lives, speedup every x ms
 
 #saveState = [[3, 1, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 saveState = None
@@ -416,8 +434,8 @@ playerLocked = False
 
 playerY = 300 #Maybe temporary?
 playerX = 128
-speed = 0.5
-lives = LIVES
+speed = endGameBoosts[1]
+lives = endGameBoosts[2]
 playerHit = 0
 
 playerDead = False
@@ -495,11 +513,14 @@ for script in os.listdir(path):
             for command in scriptList:
                 comArgs = command[0].split("|")
                 if comArgs[0].startswith("pic"):
-                    boostPicture = ["chest0.png", "chest1.png"]
+                    boostPicture = [comArgs[1], comArgs[2]]
                 elif comArgs[0].startswith("position"):
                     boostPosition = [int(comArgs[1]), int(comArgs[2]), int(comArgs[3])]
                 elif comArgs[0].startswith("boost"):
-                    boostBoost = [int(comArgs[1]), int(comArgs[2])]
+                    if comArgs[1] != '2':
+                        boostBoost = [int(comArgs[1]), int(comArgs[2]) / 10]
+                    else:
+                        boostBoost = [int(comArgs[1]), int(comArgs[2])]
 
             boostList.append(Boost([boostPosition[0], boostPosition[1]], boostPicture, boostBoost, chamberList[0]))
             
@@ -759,10 +780,10 @@ while True:
             playerY = 640
 
         # --- Speed up ---
-        if pygame.time.get_ticks() - lastSpeedUp >= 1000: #Can be slowed by boosts
+        if pygame.time.get_ticks() - lastSpeedUp >= speedUp:
             lastSpeedUp = pygame.time.get_ticks()
-            if speed < 1.3:
-                speed = speed + 0.01 #Can be slowed by boosts too, maybe?
+            if speed < endGameBoosts[0]:
+                speed = speed + 0.01
 
         # --- Change music ---
         if lives == 1:
@@ -789,7 +810,7 @@ while True:
             windowSurface.blit(lifePic, (life * 32 + 2, 768 - 50))
 
         # --- Score ---
-        scoreText = "SCORE: " + str((pygame.time.get_ticks() / 1000) - scoreStart / 1000)
+        scoreText = "SCORE: " + str(int((pygame.time.get_ticks() / 1000) - scoreStart / 1000))
         text(scoreText, [1216 - getTextLength(scoreText), 728])
 
     if GameState == GAMEOVER:
@@ -814,7 +835,8 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = playerChar.currentChamber
+            #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
+            debug = speed
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
