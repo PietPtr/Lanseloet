@@ -30,8 +30,22 @@ def saveAll():
     boostOpenedList = []
     for boost in boostList:
         boostOpenedList.append(boost.opened)
+
+    eventTriggeredList = []
+    for i in range(0, len(eventList)):
+        eventTriggeredList.append(False)
         
-    saveState = [[playerChar.position[0], playerChar.position[1], chamberList.index(playerChar.currentChamber)], endGameBoosts, [], boostOpenedList, showDebug]
+    for event in eventList:
+        if event.commandList != []:
+            for command in event.commandList:
+                if command == ["DONE"]:
+                    eventTriggeredList[eventList.index(event)] = [True, [event.position[0], event.position[1]]]
+        else:
+            eventTriggeredList[eventList.index(event)] = [True, [event.position[0], event.position[1]]]
+
+    print eventTriggeredList
+            
+    saveState = [[playerChar.position[0], playerChar.position[1], chamberList.index(playerChar.currentChamber)], endGameBoosts, eventTriggeredList, boostOpenedList, showDebug]
     try:
         pickle.dump(saveState, open("sav.sav", "wb"))
         return True
@@ -46,6 +60,9 @@ def loadAll():
         saveState = defaultSaveState
         pickle.dump(saveState, open("sav.sav", "wb"))
 
+    for i in saveState:
+        print i
+
 def resetSaveState():
     global saveState, playerChar, endGameBoosts
     loadAll()
@@ -55,6 +72,9 @@ def resetSaveState():
     showDebug = saveState[4]
     playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
     endGameBoosts = [saveState[1][0], saveState[1][1], saveState[1][2], saveState[1][3]]
+
+    for boost in boostList:
+        boost.opened = 0
 
     saveAll()
 
@@ -518,6 +538,17 @@ for script in os.listdir(path):
 
             eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
 
+for event in eventList:
+    try:
+        event.position[0] = saveState[2][eventList.index(event)][1][0]
+        event.position[1] = saveState[2][eventList.index(event)][1][1]
+        event.nextPosition[0] = saveState[2][eventList.index(event)][1][0]
+        event.nextPosition[1] = saveState[2][eventList.index(event)][1][1]
+    except:
+        pass
+    if saveState[2][eventList.index(event)] != False:
+        event.commandList = []
+    
 boostList = []
 boostPicList = []
 
@@ -761,7 +792,7 @@ while True:
                     pass
 
         # --- Pause ---
-        if escape:
+        if escape and playerLocked == False:
             GameState = PAUSE
             escape = False
 
