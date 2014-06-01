@@ -546,8 +546,11 @@ for event in eventList:
         event.nextPosition[1] = saveState[2][eventList.index(event)][1][1]
     except:
         pass
-    if saveState[2][eventList.index(event)] != False:
-        event.commandList = []
+    try:
+        if saveState[2][eventList.index(event)] != False:
+            event.commandList = []
+    except:
+        pass
     
 boostList = []
 boostPicList = []
@@ -865,7 +868,6 @@ while True:
 
         # --- Start gameover gamestate            
         if lives <= 0:
-            speed = speed / 2 #is this a good idea?
             scoreEnd = pygame.time.get_ticks()
             score = scoreEnd - scoreStart
             resetSaveState()
