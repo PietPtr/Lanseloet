@@ -14,22 +14,57 @@ boost script example:
 pic|chest.png       Picture to use
 position|17|1|0     X: 17, Y: 1 in chamber0
 boost|0|0.1         Boost[0] + 0.1 | [0] = speed (maxSpeed - 0.1 in this case), [1] = amount of objects (2 (50% or 1/2) default), [2] = lives
-message|some text   Not sure if this will be used
 """
 from __future__ import division
 import pygame, sys, os, pickle, csv, random
 from pygame.locals import *
 
-defaultSaveState = [[3 * 64, 1 * 64, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
+defaultSaveState = [[3 * 64, 1 * 64, 0], [2, 1, 2, 500], [], [], True] #position [x, y, Chamber] | Boosts | Events Triggered | Boosts picked up | debug
 
 # --- Functions ---
+"""saveState"""
+def saveAll():
+    global showDebug
+    global saveState
+
+    boostOpenedList = []
+    for boost in boostList:
+        boostOpenedList.append(boost.opened)
+        
+    saveState = [[playerChar.position[0], playerChar.position[1], chamberList.index(playerChar.currentChamber)], endGameBoosts, [], boostOpenedList, showDebug]
+    try:
+        pickle.dump(saveState, open("sav.sav", "wb"))
+        return True
+    except:
+        return False
+
+def loadAll():
+    global saveState
+    try:
+        saveState = pickle.load(open("sav.sav", "rb"))
+    except IOError:
+        saveState = defaultSaveState
+        pickle.dump(saveState, open("sav.sav", "wb"))
+
+def resetSaveState():
+    global saveState, playerChar, endGameBoosts
+    loadAll()
+
+    saveState = defaultSaveState
+
+    showDebug = saveState[4]
+    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
+    endGameBoosts = [saveState[1][0], saveState[1][1], saveState[1][2], saveState[1][3]]
+
+    saveAll()
+
 """Others"""
 def distance(speed, time):
     distance = time * speed
     return distance
 
 def startRunning():
-    global lastSpeedUp, scoreStart, mapSlices, playerY, playerX, lives
+    global lastSpeedUp, scoreStart, mapSlices, playerY, playerX, lives, endGameBoosts
     
     lastSpeedUp = pygame.time.get_ticks()
     changeGameState(RUNPLAY, "RUN.wav")
@@ -110,37 +145,6 @@ def getEventPosition(playerPos):
                     eventAtPlayer = False
 
     return eventAtPlayer
-            
-
-"""saveState"""
-def saveAll():
-    global showDebug
-    global saveState
-    saveState = [[playerChar.position[0], playerChar.position[1], chamberList.index(playerChar.currentChamber)], [], [], [], showDebug]
-    try:
-        pickle.dump(saveState, open("sav.sav", "wb"))
-        return True
-    except:
-        return False
-
-def loadAll():
-    global saveState
-    try:
-        saveState = pickle.load(open("sav.sav", "rb"))
-    except IOError:
-        saveState = defaultSaveState
-        pickle.dump(saveState, open("sav.sav", "wb"))
-
-def resetSaveState():
-    global saveState, playerChar
-    loadAll()
-
-    saveState = defaultSaveState
-
-    showDebug = saveState[4]
-    playerChar = Character([saveState[0][0], saveState[0][1]], 0, directionList, chamberList[0], None, [])
-
-    saveAll()
 
 """Button functions"""
 def newGame():
@@ -421,11 +425,11 @@ loadFont()
 
 # --- Other variables ---
 
-endGameBoosts = [2, 1, 2, 500] #max speed, startSpeed, lives, speedup every x ms
-
-#saveState = [[3, 1, 0], [], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
+#defaultSaveState = [[3 * 64, 1 * 64, 0], [2, 1, 2, 500], [], [], True] #position [x, y, Chamber] | Boosts | sounds played | options | debug
 saveState = None
 loadAll()
+
+endGameBoosts = [saveState[1][0], saveState[1][1], saveState[1][2], saveState[1][3]]
 
 showDebug = saveState[4]
 
@@ -538,7 +542,12 @@ for script in os.listdir(path):
                         boostBoost = [int(comArgs[1]), int(comArgs[2])]
 
             boostList.append(Boost([boostPosition[0], boostPosition[1]], boostPicture, boostBoost, chamberList[0]))
-            
+
+for boost in boostList:
+    try:
+        boost.opened = saveState[3][boostList.index(boost)]
+    except IndexError:
+        boost.opened = 0
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -825,6 +834,7 @@ while True:
 
         # --- Start gameover gamestate            
         if lives <= 0:
+            speed = speed / 2 #is this a good idea?
             scoreEnd = pygame.time.get_ticks()
             score = scoreEnd - scoreStart
             resetSaveState()
@@ -860,8 +870,8 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
-            debug = frameTime
+            debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
+            #debug = frameTime
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
