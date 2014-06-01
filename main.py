@@ -392,7 +392,16 @@ class Boost(object):
                         self.boostGiven = True
                     self.opened = 1
         return self.boostGiven
-  
+
+class BoostPic(object):
+    def __init__(self, position, picture):
+        self.position = position
+        self.picture = pygame.image.load("resources/" + picture)
+        self.spawnTime = pygame.time.get_ticks()
+    def update(self):
+        self.position[1] = self.position[1] - distance(0.05, frameTime)
+        windowSurface.blit(self.picture, (self.position[0], int(self.position[1])))
+
 # --- Set up ---
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
 
@@ -454,7 +463,6 @@ for picture in alphabetPictures:
 
 chamberList = []
 eventList = []
-boostList = []
 
 path = os.path.abspath("scripts")
 for script in os.listdir(path):
@@ -505,6 +513,9 @@ for script in os.listdir(path):
                 eventTrigger.append([eventPosition[0], eventPosition[1] + 64])
 
             eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
+
+boostList = []
+boostPicList = []
 
 for script in os.listdir(path):
     with open('scripts/' + script, 'rb') as csvscript:
@@ -706,12 +717,20 @@ while True:
 
         for boost in boostList:
             if boost.update() == True:
-                print True
-            
+                if boost.boost[0] != 2:
+                    boostPicture = "speed.png"
+                else:
+                    boostPicture = "lives.png"
+                boostPicList.append(BoostPic([playerChar.position[0] + random.randint(-16, 16), playerChar.position[1] - 32], boostPicture))
 
         playerChar.updateAnimation()
         playerChar.update()
         
+        for boostPic in boostPicList:
+            boostPic.update()
+            if pygame.time.get_ticks() - boostPic.spawnTime >= 1000:
+                del boostPicList[boostPicList.index(boostPic)]
+
         # --- Movement ---
         if playerLocked == False:
             if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
