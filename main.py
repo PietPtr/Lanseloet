@@ -380,6 +380,7 @@ class Boost(object):
                 self.triggerList.append([self.position[0] + 1, self.position[1], 1])
     def update(self):
         global endGameBoosts
+        self.boostGiven = False
         
         if playerChar.currentChamber == self.currentChamber:
             windowSurface.blit(self.picture[self.opened], (self.position[0] * 64, self.position[1] * 64))
@@ -388,8 +389,9 @@ class Boost(object):
                     if self.opened == 0:
                         soundList[4].play()
                         endGameBoosts[self.boost[0]] += self.boost[1]
-                        
+                        self.boostGiven = True
                     self.opened = 1
+        return self.boostGiven
   
 # --- Set up ---
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,40)
@@ -703,7 +705,9 @@ while True:
                 playerLocked = False
 
         for boost in boostList:
-            boost.update()
+            if boost.update() == True:
+                print True
+            
 
         playerChar.updateAnimation()
         playerChar.update()
@@ -838,7 +842,7 @@ while True:
     if showDebug == True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
-            debug = speed
+            debug = frameTime
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
