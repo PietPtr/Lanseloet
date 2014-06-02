@@ -1,4 +1,4 @@
-pics|lanseloet/up.png|lanseloet/left.png|lanseloet/down.png|lanseloet/right.png
+pics|mother/up.png|mother/left.png|mother/down.png|mother/right.png
 position|1|3|2|1
 playsound|1
 walk|4|3

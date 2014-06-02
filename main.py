@@ -64,6 +64,7 @@ def loadAll():
         print i
 
 def resetSaveState():
+    print "resetting"
     global saveState, playerChar, endGameBoosts
     loadAll()
 
@@ -86,7 +87,7 @@ def distance(speed, time):
     return distance
 
 def startRunning():
-    global lastSpeedUp, scoreStart, mapSlices, playerY, playerX, lives, endGameBoosts
+    global lastSpeedUp, scoreStart, mapSlices, playerY, playerX, lives, endGameBoosts, speed
     
     lastSpeedUp = pygame.time.get_ticks()
     changeGameState(RUNPLAY, "RUN.wav")
@@ -96,7 +97,7 @@ def startRunning():
     playerY = 300
     playerX = 128
     lives = endGameBoosts[2]
-    speed = endGameBoosts[0]
+    speed = endGameBoosts[1]
     speedUp = endGameBoosts[3]
     
 """font"""
@@ -918,13 +919,13 @@ while True:
     if showDebug == True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
-            debug = playerLocked
+            debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
+            #debug = playerLocked
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
         
-
     # --- Run outside GameState system ---
     """"Reset variables"""
     clicked = False
