@@ -76,6 +76,8 @@ def resetSaveState():
     for boost in boostList:
         boost.opened = 0
 
+    loadChambersAndEvents()
+
     saveAll()
 
 """Others"""
@@ -115,7 +117,7 @@ def text(text, coords):
     global alphabetPictures
     
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":"]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", ":", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     index = 0
     for letter in text:
         outputList.append(alphabet.index(text[index]))
@@ -134,7 +136,7 @@ def getTextLength(text):
     textLength = 0
 
     outputList = []
-    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":"]
+    alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ", ".", ",", "?", "!", ":", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     count = 0
     for letter in text:
         outputList.append(alphabet.index(text[count]))
@@ -165,6 +167,63 @@ def getEventPosition(playerPos):
                     eventAtPlayer = False
 
     return eventAtPlayer
+
+"""Load from file"""
+def loadChambersAndEvents():
+    global chamberList, eventList
+
+    eventList = []
+    
+    path = os.path.abspath("scripts")
+    for script in os.listdir(path):
+        with open('scripts/' + script, 'rb') as csvscript:
+            scriptReader = csv.reader(csvscript, delimiter=' ', quotechar='"')
+            scriptList = []
+            if script.startswith('chamber'):
+                for command in scriptReader:
+                    scriptList.append(command)
+                mapWalls = []
+                mapWarps = []
+                for command in scriptList:
+                    comArgs = command[0].split('|')
+                    if comArgs[0].startswith("pic"):
+                        mapImage = pygame.image.load('resources/' + comArgs[1])
+                    elif comArgs[0].startswith("wall"):
+                        mapWalls.append([int(comArgs[1]), int(comArgs[2])])
+                    elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
+                        mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3]), int(comArgs[4])))
+                        
+                chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
+            elif script.startswith('event'):
+                for command in scriptReader:
+                    scriptList.append(command)
+
+                commandList = []
+                eventTrigger = []
+                triggerAvailable = False
+                
+                for command in scriptList:
+                    comArgs = command[0].split("|")
+                    if comArgs[0].startswith("pic"):
+                        eventSpriteList = []
+                        for eventPicture in comArgs:
+                            if eventPicture != 'pics':
+                                eventSpriteList.append(pygame.transform.scale(pygame.image.load("resources/" + eventPicture), (64, 128)))
+                    elif comArgs[0].startswith("position"):
+                        eventPosition = [int(comArgs[1]) * 64, int(comArgs[2]) * 64]
+                        eventDirection = int(comArgs[3])
+                        eventChamber = chamberList[int(comArgs[4])]
+                    elif comArgs[0].startswith("trigger"):
+                        eventTrigger.append([int(comArgs[1]) * 64, int(comArgs[2]) * 64])
+                        triggerAvailable = True
+                    else:
+                        commandList.append(command)
+
+                if triggerAvailable == False:
+                    eventTrigger.append([eventPosition[0], eventPosition[1] + 64])
+
+                eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
+
 
 """Button functions"""
 def newGame():
@@ -488,55 +547,7 @@ for picture in alphabetPictures:
 chamberList = []
 eventList = []
 
-path = os.path.abspath("scripts")
-for script in os.listdir(path):
-    with open('scripts/' + script, 'rb') as csvscript:
-        scriptReader = csv.reader(csvscript, delimiter=' ', quotechar='"')
-        scriptList = []
-        if script.startswith('chamber'):
-            for command in scriptReader:
-                scriptList.append(command)
-            mapWalls = []
-            mapWarps = []
-            for command in scriptList:
-                comArgs = command[0].split('|')
-                if comArgs[0].startswith("pic"):
-                    mapImage = pygame.image.load('resources/' + comArgs[1])
-                elif comArgs[0].startswith("wall"):
-                    mapWalls.append([int(comArgs[1]), int(comArgs[2])])
-                elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
-                    mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3]), int(comArgs[4])))
-                    
-            chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
-        elif script.startswith('event'):
-            for command in scriptReader:
-                scriptList.append(command)
-
-            commandList = []
-            eventTrigger = []
-            triggerAvailable = False
-            
-            for command in scriptList:
-                comArgs = command[0].split("|")
-                if comArgs[0].startswith("pic"):
-                    eventSpriteList = []
-                    for eventPicture in comArgs:
-                        if eventPicture != 'pics':
-                            eventSpriteList.append(pygame.transform.scale(pygame.image.load("resources/" + eventPicture), (64, 128)))
-                elif comArgs[0].startswith("position"):
-                    eventPosition = [int(comArgs[1]) * 64, int(comArgs[2]) * 64]
-                    eventDirection = int(comArgs[3])
-                    eventChamber = chamberList[int(comArgs[4])]
-                elif comArgs[0].startswith("trigger"):
-                    eventTrigger.append([int(comArgs[1]) * 64, int(comArgs[2]) * 64])
-                    triggerAvailable = True
-                else:
-                    commandList.append(command)
-
-            if triggerAvailable == False:
-                eventTrigger.append([eventPosition[0], eventPosition[1] + 64])
-
-            eventList.append(Character(eventPosition, eventDirection, eventSpriteList, eventChamber, eventTrigger, commandList))
+loadChambersAndEvents()
 
 for event in eventList:
     try:
@@ -555,6 +566,7 @@ for event in eventList:
 boostList = []
 boostPicList = []
 
+path = os.path.abspath("scripts")
 for script in os.listdir(path):
     with open('scripts/' + script, 'rb') as csvscript:
         scriptReader = csv.reader(csvscript, delimiter=' ', quotechar='"')
@@ -743,6 +755,8 @@ while True:
         windowSurface.fill(BLACK)
         playerChar.currentChamber.render()
 
+        playerLocked = False
+
         for event in eventList:
             event.updateAnimation()
             event.update()
@@ -875,7 +889,7 @@ while True:
 
         # --- blit lives ---
         for life in range(0, lives):
-            windowSurface.blit(lifePic, (life * 32 + 2, 768 - 50))
+            windowSurface.blit(lifePic, (life * 48 + 2, 768 - 70))
 
         # --- Score ---
         scoreText = "SCORE: " + str(int((pygame.time.get_ticks() / 1000) - scoreStart / 1000))
@@ -903,8 +917,8 @@ while True:
     # --- Debug ---
     if showDebug == True:
         try:
-            debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
-            #debug = frameTime
+            #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
+            debug = playerLocked
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color

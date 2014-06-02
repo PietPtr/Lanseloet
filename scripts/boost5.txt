@@ -1,0 +1,3 @@
+pic|chest0.png|chest1.png
+position|17|4|0
+boost|2|5
