@@ -1,6 +1,6 @@
+
 """
 TODO:
-    Save events and boosts...
 
 event script example:
     pics|lanseloetup.png|lanseloetleft.png|lanseloetleft.png|lanseloetright.png
@@ -919,8 +919,8 @@ while True:
     if showDebug == True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
-            debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
-            #debug = playerLocked
+            #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
+            debug = frameTime
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
