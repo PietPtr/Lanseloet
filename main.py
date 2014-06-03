@@ -188,7 +188,7 @@ def loadChambersAndEvents():
                 for command in scriptList:
                     comArgs = command[0].split('|')
                     if comArgs[0].startswith("pic"):
-                        mapImage = pygame.image.load('resources/' + comArgs[1])
+                        mapImage = pygame.transform.scale(pygame.image.load('resources/' + comArgs[1]), (1216, 768))
                     elif comArgs[0].startswith("wall"):
                         mapWalls.append([int(comArgs[1]), int(comArgs[2])])
                     elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX

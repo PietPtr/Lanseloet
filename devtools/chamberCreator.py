@@ -27,7 +27,7 @@ basicFont = pygame.font.SysFont(None, 23)
 mainClock = pygame.time.Clock()
 
 # --- Other variables ---
-showDebug = False
+showDebug = True
 screenshot = False
 
 loopTrack = 0
@@ -92,7 +92,7 @@ while True:
     windowSurface.blit(tileSurface, (0, 0))
     
     if showDebug == True:
-        debug = activeTile
+        debug = (mousePosition[0] - (mousePosition[0] % 32)) / 32, (mousePosition[1] - (mousePosition[1] % 32)) / 32
         debugText = basicFont.render(str(debug), True, YELLOW) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
@@ -105,12 +105,16 @@ while True:
                 showDebug = not showDebug
             if event.key == 282:
                 screenshot = True
+            if event.key == 275:
+                tiles[activeTile] = pygame.transform.rotate(tiles[activeTile], 90)
+            if event.key == 276:
+                tiles[activeTile] = pygame.transform.rotate(tiles[activeTile], -90)
         if event.type == MOUSEBUTTONUP:
-            if event.button == 4:
+            if event.button == 5:
                 activeTile += 1
                 if activeTile >= len(tiles) - 1:
                     activeTile = len(tiles) - 1
-            elif event.button == 5:
+            elif event.button == 4:
                 activeTile -= 1
                 if activeTile <= 0:
                     activeTile = 0
