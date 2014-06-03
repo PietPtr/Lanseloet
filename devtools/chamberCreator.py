@@ -6,24 +6,19 @@ def distance(speed, time):
     distance = time * speed
     return distance
 
-class Tile(object):
-    def __init__(self, position, picture, inChamber):
+# --- Classes ---
+class ChamberTile(object):
+    def __init__(self, position, picture):
         self.isActive = False
         self.position = position
         self.picture = picture
-        self.inChamber = inChamber
     def update(self):
-        if self.inChamber == False
-            windowSurface.blit(self.picture)
-        else:
-            tileSurface.blit(self.picture)
-
-# --- Classes ---
-
+        tileSurface.blit(self.picture,(self.position[0], self.position[1]))
+        
 # --- Set up ---
 pygame.init()
 
-windowSurface = pygame.display.set_mode((608, 896), 0, 32) #always 0 and 32
+windowSurface = pygame.display.set_mode((608, 420), 0, 32) #always 0 and 32
 tileSurface = pygame.Surface((608, 384), 0, 32)
 pygame.display.set_caption('Chamber Creator')
 
@@ -33,9 +28,11 @@ mainClock = pygame.time.Clock()
 
 # --- Other variables ---
 showDebug = False
-screenshot = True
+screenshot = False
 
 loopTrack = 0
+
+activeTile = 0
 
 chamber = []
 for y in range(0, 12):
@@ -44,25 +41,29 @@ for y in range(0, 12):
         chamber[y].append(None)
 
 tiles = []
-for maxTile in range(0, 99):
-    tiles.append(None)
+
+tileMaps = []
+for y in range(0, 24):
+    tileMaps.append([])
+    for x in range(0, 19):
+        tileMaps[y].append(None)
 
 # --- Constants ---
 BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
+WHITE = (225, 225, 225)
+RED = (100, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
-# --- Objects ---
 
 # --- Image & music Loading --- 
 path = os.path.abspath("tiles")
 for tile in os.listdir(path):
-    tiles[int(tile[0]) + int(tile[1])] = pygame.image.load("tiles/" + tile)
+    tiles.append(pygame.image.load("tiles/" + tile))
 
-print tiles
+defaultChamber = pygame.image.load("default.png")
+tileSurface.blit(defaultChamber, (0, 0))
 
 # --- Main loop ---
 while True:
@@ -73,42 +74,52 @@ while True:
     loopTrack = loopTrack + 1
 
     windowSurface.fill(WHITE)
+    
+    pygame.draw.rect(windowSurface, RED, (0, 384, 608, 4))
 
-    pygame.draw.rect(windowSurface, BLACK, (608, 0, 3, 384))
-
-    tileTrack = 0
-    for tile in tiles:
-        if tile != None:
-            
-        tileTrack += 1
+    if pygame.mouse.get_pressed()[0] and mousePosition[1] < 384:
+        chamber[(mousePosition[1] - (mousePosition[1] % 32)) / 32][(mousePosition[0] - (mousePosition[0] % 32)) / 32] = ChamberTile([(mousePosition[0] - (mousePosition[0] % 32)), (mousePosition[1] - (mousePosition[1] % 32))], tiles[activeTile])
 
     yTrack = 0
     for y in chamber:
         xTrack = 0
         for x in y:
             if x != None:
-                tileSurface.blit(x.picture, (xTrack * 32, yTrack * 32))
+                x.update()
             xTrack += 1
         yTrack += 1
 
     windowSurface.blit(tileSurface, (0, 0))
     
     if showDebug == True:
-        debug = "string"
+        debug = activeTile
         debugText = basicFont.render(str(debug), True, YELLOW) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
-    pygame.display.update()
+    activeText = basicFont.render("ACTIVE TILE:", True, BLACK)
+    windowSurface.blit(activeText, (1, 420 - activeText.get_size()[1] - 1))
+
     for event in pygame.event.get():
         if event.type == KEYUP:
             if event.key == 284:
                 showDebug = not showDebug
             if event.key == 282:
                 screenshot = True
+        if event.type == MOUSEBUTTONUP:
+            if event.button == 4:
+                activeTile += 1
+                if activeTile >= len(tiles) - 1:
+                    activeTile = len(tiles) - 1
+            elif event.button == 5:
+                activeTile -= 1
+                if activeTile <= 0:
+                    activeTile = 0
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-            
+
+    windowSurface.blit(tiles[activeTile], (107, 420 - 32))
+
     if screenshot == True:
         screenshot = False
         for x in range(0, 65536):
@@ -117,3 +128,5 @@ while True:
             elif os.path.exists("chamber" + str(x) + ".png") == False:
                 pygame.image.save(tileSurface, "chamber" + str(x) + ".png")
                 break
+
+    pygame.display.update()
