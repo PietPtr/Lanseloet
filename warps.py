@@ -1,7 +1,14 @@
-import pygame, sys, pickle, csv
+import pygame, sys
 from pygame.locals import *
 
-mapimageloading = raw_input("What image do you want to load? ")
+#chamber1 = raw_input("First Chamber ID: ")
+#chamber2 = raw_input("Second Chamber ID: ")
+
+chamber1 = 0
+chamber2 = 1
+
+chamber1 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber1) + ".png"), (1216, 768))
+chamber2 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber2) + ".png"), (1216, 768))
 
 # --- Functions ---
 def distance(speed, time):
@@ -25,11 +32,7 @@ showDebug = True
 
 loopTrack = 0
 
-mapname = pygame.transform.scale(pygame.image.load("resources/" + mapimageloading + '.png'), (1216, 768))
-
-script = ['pic|' + mapimageloading + '.png']
-
-mode = "walls"
+chamber = 'first'
 
 # --- Constants ---
 BLACK = (0, 0, 0)
@@ -42,8 +45,7 @@ YELLOW = (255, 255, 0)
 # --- Objects ---
 
 # --- Image & music Loading --- 
-tile = pygame.image.load('resources/TILE.png')
-tileC = pygame.image.load('resources/TILEC.png')
+
 
 # --- Main loop ---
 while True:
@@ -53,19 +55,14 @@ while True:
     mousePosition = pygame.mouse.get_pos()
     loopTrack = loopTrack + 1
 
-    windowSurface.blit(mapname, (0, 0))
-
-    for y in range(-1, 12):
-        for x in range(-1, 19):
-            windowSurface.blit(tile, (x * 64, y * 64))
-
-    if pygame.mouse.get_pressed()[0] and mode == 'walls':
-        coords = [(mousePosition[0] - ((mousePosition[0]) % 64)) / 64, (mousePosition[1] - ((mousePosition[1]) % 64)) / 64]
-        if 'wall|' + str(coords[0]) + '|' + str(coords[1]) not in script:
-            script.append('wall|' + str(coords[0]) + '|' + str(coords[1]))
+    windowSurface.fill(BLACK)
+    if chamber == 'first':
+        windowSurface.blit(chamber1, (0, 0))
+    elif chamber == 'second':
+        windowSurface.blit(chamber2, (0, 0))
     
     if showDebug == True:
-        debug = mode
+        debug = True
         debugText = basicFont.render(str(debug), True, YELLOW) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
@@ -74,18 +71,11 @@ while True:
         if event.type == KEYUP:
             if event.key == 284:
                 showDebug = not showDebug
-            if event.key == 13:
-                print script
-                if mode == "walls":
-                    with open(mapimageloading + '.txt', 'wb') as scriptFile:
-                        scriptWriter = csv.writer(scriptFile, delimiter=' ')
-                        for line in script:
-                            scriptWriter.writerow([line])
-                
+        if event.type == MOUSEBUTTONUP:
+            if event.button == 1:
+                chamber = "second"
+                warpPos1 = [(mousePosition[0] - (mousePosition[0] % 64)) / 64, (mousePosition[1] - (mousePosition[1] % 64)) / 64]
+                print warpPos1
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-
-
-
-

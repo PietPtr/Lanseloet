@@ -18,7 +18,7 @@ class ChamberTile(object):
 # --- Set up ---
 pygame.init()
 
-windowSurface = pygame.display.set_mode((608, 420), 0, 32) #always 0 and 32
+windowSurface = pygame.display.set_mode((608, 420 + 64), 0, 32) #always 0 and 32
 tileSurface = pygame.Surface((608, 384), 0, 32)
 pygame.display.set_caption('Chamber Creator')
 
@@ -29,6 +29,7 @@ mainClock = pygame.time.Clock()
 # --- Other variables ---
 showDebug = True
 screenshot = False
+screenshotOverride = False
 
 loopTrack = 0
 
@@ -105,6 +106,8 @@ while True:
                 showDebug = not showDebug
             if event.key == 282:
                 screenshot = True
+            if event.key == 293:
+                screenshotOverride = True
             if event.key == 275:
                 tiles[activeTile] = pygame.transform.rotate(tiles[activeTile], 90)
             if event.key == 276:
@@ -132,5 +135,7 @@ while True:
             elif os.path.exists("chamber" + str(x) + ".png") == False:
                 pygame.image.save(tileSurface, "chamber" + str(x) + ".png")
                 break
+    elif screenshotOverride:
+        pygame.image.save(tileSurface, "default.png")
 
     pygame.display.update()

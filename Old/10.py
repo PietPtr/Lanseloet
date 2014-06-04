@@ -193,9 +193,8 @@ def loadChambersAndEvents():
                         mapImage = pygame.transform.scale(pygame.image.load('resources/' + comArgs[1]), (1216, 768))
                     elif comArgs[0].startswith("wall"):
                         mapWalls.append([int(comArgs[1]), int(comArgs[2])])
-                    elif comArgs[0].startswith("warp"): #warp|0|3|18|3|1 means warp at X:0 Y:3, goes to chamber1 to location X:0 Y:3
-                        print len(comArgs), comArgs
-                        mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], [int(comArgs[3]), int(comArgs[4])], int(comArgs[5])))
+                    elif comArgs[0].startswith("warp"): #warp|0|3|1 means warp at X:0 Y:3, goes to chamber1s warp ID == INDEX
+                        mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], int(comArgs[3]), int(comArgs[4])))
                         
                 chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
             elif script.startswith('event'):
@@ -257,7 +256,7 @@ def no():
 class Chamber(object):
     def __init__(self, mapPicture, warps, events, wallList):
         self.mapPicture = mapPicture
-        self.warps = warps    #list of warp objects
+        self.warps = warps    #list of lists: [[pos1, pos2], warpto]
         self.events = events  #list of character objects
         self.wallList = wallList    #list of coordinates
         self.i = 0
@@ -374,15 +373,17 @@ class Character(object):
         elif self.nextPosition[1] < 0:
             self.nextPosition[1] = 0
 
+        self.tracker = 0
         for warp in self.currentChamber.warps:
             if [self.nextPosition[0] / 64, self.nextPosition[1] / 64] == warp.position and self.warped == False:
-                print warp.destinationChamber
+                #play a sound: door
                 self.currentChamber = chamberList[warp.destinationChamber]
-                self.nextPosition[0] = warp.destinationPos[0] * 64
-                self.nextPosition[1] = warp.destinationPos[1] * 64
+                self.nextPosition[0] = chamberList[warp.destinationChamber].warps[warp.destinationID].position[0] * 64
+                self.nextPosition[1] = chamberList[warp.destinationChamber].warps[warp.destinationID].position[1] * 64
                 self.position[0] = self.nextPosition[0]
                 self.position[1] = self.nextPosition[1]
                 self.warped = True
+            self.tracker += 1
 
         if playerChar.currentChamber == self.currentChamber:
             windowSurface.blit(self.spriteList[self.direction], (self.position[0], self.position[1] - 64))
@@ -418,10 +419,10 @@ class Button(object):
             return False
 
 class Warp(object):
-    def __init__(self, position, destinationPos, destinationChamber): #ownID = index
+    def __init__(self, position, destinationChamber, destinationID): #ownID = index
         self.position = position
         self.destinationChamber = destinationChamber
-        self.destinationPos = destinationPos
+        self.destinationID = destinationID
         
 class MapSlice(object):
     def __init__(self, position, noBlock):
@@ -921,7 +922,7 @@ while True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
-            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64, chamberList.index(playerChar.currentChamber)
+            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
