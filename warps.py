@@ -1,14 +1,11 @@
-import pygame, sys
+import pygame, sys, csv
 from pygame.locals import *
 
-#chamber1 = raw_input("First Chamber ID: ")
-#chamber2 = raw_input("Second Chamber ID: ")
+chamber1 = raw_input("First Chamber ID: ")
+chamber2 = raw_input("Second Chamber ID: ")
 
-chamber1 = 0
-chamber2 = 1
-
-chamber1 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber1) + ".png"), (1216, 768))
-chamber2 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber2) + ".png"), (1216, 768))
+chamberpic1 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber1) + ".png"), (1216, 768))
+chamberpic2 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber2) + ".png"), (1216, 768))
 
 # --- Functions ---
 def distance(speed, time):
@@ -31,6 +28,8 @@ mainClock = pygame.time.Clock()
 showDebug = True
 
 loopTrack = 0
+
+warpList = []
 
 chamber = 'first'
 
@@ -57,12 +56,16 @@ while True:
 
     windowSurface.fill(BLACK)
     if chamber == 'first':
-        windowSurface.blit(chamber1, (0, 0))
+        windowSurface.blit(chamberpic1, (0, 0))
     elif chamber == 'second':
-        windowSurface.blit(chamber2, (0, 0))
+        windowSurface.blit(chamberpic2, (0, 0))
     
     if showDebug == True:
-        debug = True
+        try:
+            debug = warpPos1, warpPos2
+        except NameError:
+            debug = "Undefined"
+
         debugText = basicFont.render(str(debug), True, YELLOW) #text | antialiasing | color
         windowSurface.blit(debugText, (1, 1))
 
@@ -71,11 +74,44 @@ while True:
         if event.type == KEYUP:
             if event.key == 284:
                 showDebug = not showDebug
+            if event.key == 13:
+                if chamber == "second":
+                    with open(str(chamber1) + '.txt', 'wb') as scriptFile:
+                        scriptWriter = csv.writer(scriptFile, delimiter=' ')
+                        for warp in warpList:
+                            print warp
+                            scriptWriter.writerow(['warp|' + str(warp[0][0]) + '|' + str(warp[0][1]) + '|' + str(warp[1][0]) + '|' + str(warp[1][1]) + '|' + str(chamber2)])
+                    chamber = 'first'
+
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
-                chamber = "second"
-                warpPos1 = [(mousePosition[0] - (mousePosition[0] % 64)) / 64, (mousePosition[1] - (mousePosition[1] % 64)) / 64]
-                print warpPos1
+                if chamber == 'first':
+                    chamber = 'second'
+                    warpPos1 = [(mousePosition[0] - (mousePosition[0] % 64)) / 64, (mousePosition[1] - (mousePosition[1] % 64)) / 64]
+                    print warpPos1
+                elif chamber == 'second':
+                    warpPos2 = [(mousePosition[0] - (mousePosition[0] % 64)) / 64, (mousePosition[1] - (mousePosition[1] % 64)) / 64]
+                    print warpPos2
+                    warpList.append([warpPos1, warpPos2])
+                
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
