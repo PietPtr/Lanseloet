@@ -72,6 +72,12 @@ while True:
     pygame.display.update()
     for event in pygame.event.get():
         if event.type == KEYUP:
+            if event.key == 27:
+                chamber1 = raw_input("First Chamber ID: ")
+                chamber2 = raw_input("Second Chamber ID: ")
+
+                chamberpic1 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber1) + ".png"), (1216, 768))
+                chamberpic2 = pygame.transform.scale(pygame.image.load("resources/chamber" + str(chamber2) + ".png"), (1216, 768))
             if event.key == 284:
                 showDebug = not showDebug
             if event.key == 13:
@@ -97,21 +103,3 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
