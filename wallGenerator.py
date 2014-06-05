@@ -1,7 +1,8 @@
 import pygame, sys, pickle, csv
 from pygame.locals import *
 
-mapimageloading = raw_input("What image do you want to load? ")
+mapimageloading = raw_input("chamber ID: ")
+mapimageloading = 'chamber' + mapimageloading
 
 # --- Functions ---
 def distance(speed, time):
@@ -85,7 +86,3 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-
-
-
-
