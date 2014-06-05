@@ -1,3 +1,13 @@
+"""
+Codes for tiles:
+0: Important tile like floor/wall
+1: Furniture
+2: Stuff on the wall (Window, torch)
+3: 
+4: 
+5: Carpet
+6: Paintings
+"""
 import pygame, sys, os, random
 from pygame.locals import *
 

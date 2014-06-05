@@ -1,7 +1,8 @@
 import pygame, sys, pickle, csv
 from pygame.locals import *
 
-mapimageloading = raw_input("What image do you want to load? ")
+mapimageloading = raw_input("Chamber ID: ")
+mapimageloading = "chamber: " + mapimageloading
 
 # --- Functions ---
 def distance(speed, time):
