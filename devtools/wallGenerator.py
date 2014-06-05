@@ -1,8 +1,8 @@
 import pygame, sys, pickle, csv
 from pygame.locals import *
 
-mapimageloading = raw_input("Chamber ID: ")
-mapimageloading = "chamber: " + mapimageloading
+mapimageloading = raw_input("chamber ID: ")
+mapimageloading = 'chamber' + mapimageloading
 
 # --- Functions ---
 def distance(speed, time):
@@ -26,7 +26,7 @@ showDebug = True
 
 loopTrack = 0
 
-mapname = pygame.image.load("resources/" + mapimageloading + '.png')
+mapname = pygame.transform.scale(pygame.image.load("resources/" + mapimageloading + '.png'), (1216, 768))
 
 script = ['pic|' + mapimageloading + '.png']
 
@@ -65,11 +65,6 @@ while True:
         if 'wall|' + str(coords[0]) + '|' + str(coords[1]) not in script:
             script.append('wall|' + str(coords[0]) + '|' + str(coords[1]))
     
-    if pygame.mouse.get_pressed()[0] and mode == "warps":
-        coords = [(mousePosition[0] - ((mousePosition[0]) % 64)) / 64, (mousePosition[1] - ((mousePosition[1]) % 64)) / 64]
-        if 'warp|' + str(coords[0]) + '|' + str(coords[1]) not in script:
-            script.append('warp|' + str(coords[0]) + '|' + str(coords[1]))
-    
     if showDebug == True:
         debug = mode
         debugText = basicFont.render(str(debug), True, YELLOW) #text | antialiasing | color
@@ -83,8 +78,6 @@ while True:
             if event.key == 13:
                 print script
                 if mode == "walls":
-                    mode = "warps"
-                elif mode == "warps":
                     with open(mapimageloading + '.txt', 'wb') as scriptFile:
                         scriptWriter = csv.writer(scriptFile, delimiter=' ')
                         for line in script:
@@ -93,7 +86,3 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-
-
-
-
