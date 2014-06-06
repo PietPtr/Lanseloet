@@ -11,6 +11,9 @@ Codes for tiles:
 import pygame, sys, os, random
 from pygame.locals import *
 
+whatChamber = raw_input("What picture do you want to load? ")
+whatChamber = whatChamber + ".png"
+
 # --- Functions ---
 def distance(speed, time):
     distance = time * speed
@@ -73,7 +76,7 @@ path = os.path.abspath("tiles")
 for tile in os.listdir(path):
     tiles.append(pygame.image.load("tiles/" + tile))
 
-defaultChamber = pygame.image.load("default.png")
+defaultChamber = pygame.image.load(whatChamber)
 tileSurface.blit(defaultChamber, (0, 0))
 
 # --- Main loop ---
@@ -140,12 +143,12 @@ while True:
     if screenshot == True:
         screenshot = False
         for x in range(0, 65536):
-            if os.path.exists("chamber" + str(x) + ".png") == True:
+            if os.path.exists("room" + str(x) + ".png") == True:
                 next
-            elif os.path.exists("chamber" + str(x) + ".png") == False:
-                pygame.image.save(tileSurface, "chamber" + str(x) + ".png")
+            elif os.path.exists("room" + str(x) + ".png") == False:
+                pygame.image.save(tileSurface, "room" + str(x) + ".png")
                 break
     elif screenshotOverride:
-        pygame.image.save(tileSurface, "default.png")
+        pygame.image.save(tileSurface, whatChamber)
 
     pygame.display.update()
