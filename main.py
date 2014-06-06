@@ -44,8 +44,6 @@ def saveAll():
                     eventTriggeredList[eventList.index(event)] = [True, [event.position[0], event.position[1]]]
         else:
             eventTriggeredList[eventList.index(event)] = [True, [event.position[0], event.position[1]]]
-
-    print eventTriggeredList
             
     saveState = [[playerChar.position[0], playerChar.position[1], chamberList.index(playerChar.currentChamber)], endGameBoosts, eventTriggeredList, boostOpenedList, showDebug]
     try:
@@ -62,11 +60,7 @@ def loadAll():
         saveState = defaultSaveState
         pickle.dump(saveState, open("sav.sav", "wb"))
 
-    for i in saveState:
-        print i
-
 def resetSaveState():
-    print "resetting"
     global saveState, playerChar, endGameBoosts
     loadAll()
 
@@ -194,7 +188,6 @@ def loadChambersAndEvents():
                     elif comArgs[0].startswith("wall"):
                         mapWalls.append([int(comArgs[1]), int(comArgs[2])])
                     elif comArgs[0].startswith("warp"): #warp|0|3|18|3|1 means warp at X:0 Y:3, goes to chamber1 to location X:0 Y:3
-                        print len(comArgs), comArgs
                         mapWarps.append(Warp([int(comArgs[1]), int(comArgs[2])], [int(comArgs[3]), int(comArgs[4])], int(comArgs[5])))
                         
                 chamberList.append(Chamber(mapImage, mapWarps, [], mapWalls))
@@ -921,7 +914,7 @@ while True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
-            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64, chamberList.index(playerChar.currentChamber)
+            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64, chamberList.index(playerChar.currentChamber), frameTime
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
