@@ -296,21 +296,29 @@ class Character(object):
         self.warped = False
         
     def updateAnimation(self):
-        if self.position[0] != self.nextPosition[0]:
-            if self.position[0] < self.nextPosition[0]:
-                self.position[0] += int(distance(0.5, frameTime))
-            elif self.position[0] > self.nextPosition[0]:
-                self.position[0] -= int(distance(0.5, frameTime))
-            self.animationRunning = True
-        if self.position[1] != self.nextPosition[1]:
-            if self.position[1] < self.nextPosition[1]:
-                self.position[1] += int(distance(0.5, frameTime))
-            elif self.position[1] > self.nextPosition[1]:
-                self.position[1] -= int(distance(0.5, frameTime))
+        self.updateAnimationer(0)
+        self.updateAnimationer(1)
+        
+    def updateAnimationer(self, onetwo):
+        if self.position[onetwo] != self.nextPosition[onetwo]:
+            if self.position[onetwo] < self.nextPosition[onetwo]:
+                if self.direction == 0:
+                    self.position[onetwo] = self.nextPosition[onetwo]
+                if self.direction == 1:
+                    self.position[onetwo] = self.nextPosition[onetwo]
+                else:
+                    self.position[onetwo] += int(distance(0.5, frameTime))
+            elif self.position[onetwo] > self.nextPosition[onetwo]:
+                if self.direction == 2:
+                    self.position[onetwo] = self.nextPosition[onetwo]
+                if self.direction == 3:
+                    self.position[onetwo] = self.nextPosition[onetwo]
+                else:
+                    self.position[onetwo] -= int(distance(0.5, frameTime))
             self.animationRunning = True
         if self.position[1] == self.nextPosition[1] and self.position[0] == self.nextPosition[0]:
             self.animationRunning = False
-            
+    
     def exeCommands(self):
         self.cmdCount = 0
         for cmd in self.commandList:
@@ -914,7 +922,7 @@ while True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
-            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64, chamberList.index(playerChar.currentChamber), frameTime
+            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64, chamberList.index(playerChar.currentChamber), int(1000 / frameTime)
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
@@ -943,3 +951,6 @@ while True:
             elif os.path.exists("screenshot" + str(x) + ".png") == False:
                 pygame.image.save(windowSurface, "screenshot" + str(x) + ".png")
                 break
+
+    for i in range(0, 10):
+        pass#print "lagg"
