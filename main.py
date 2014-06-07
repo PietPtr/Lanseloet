@@ -296,26 +296,31 @@ class Character(object):
         self.warped = False
         
     def updateAnimation(self):
-        self.updateAnimationer(0)
-        self.updateAnimationer(1)
+        self.animationUpdater(0)
+        self.animationUpdater(1)
         
-    def updateAnimationer(self, onetwo):
-        if self.position[onetwo] != self.nextPosition[onetwo]:
-            if self.position[onetwo] < self.nextPosition[onetwo]:
-                if self.direction == 0:
-                    self.position[onetwo] = self.nextPosition[onetwo]
-                if self.direction == 1:
-                    self.position[onetwo] = self.nextPosition[onetwo]
-                else:
-                    self.position[onetwo] += int(distance(0.5, frameTime))
-            elif self.position[onetwo] > self.nextPosition[onetwo]:
-                if self.direction == 2:
-                    self.position[onetwo] = self.nextPosition[onetwo]
-                if self.direction == 3:
-                    self.position[onetwo] = self.nextPosition[onetwo]
-                else:
-                    self.position[onetwo] -= int(distance(0.5, frameTime))
-            self.animationRunning = True
+    def animationUpdater(self, onetwo):
+        if self.direction == 0:
+            if self.position[1] - int(distance(0.5, frameTime)) > self.nextPosition[1]:
+                self.position[1] = self.position[1] - int(distance(0.5, frameTime))
+            elif self.position[1] - int(distance(0.5, frameTime)) < self.nextPosition[1]:
+                self.position[1] = self.nextPosition[1]
+        if self.direction == 1:
+            if self.position[0] - int(distance(0.5, frameTime)) > self.nextPosition[0]:
+                self.position[0] = self.position[0] - int(distance(0.5, frameTime))
+            elif self.position[0] - int(distance(0.5, frameTime)) < self.nextPosition[0]:
+                self.position[0] = self.nextPosition[0]
+        if self.direction == 2:
+            if self.position[1] + int(distance(0.5, frameTime)) < self.nextPosition[1]:
+                self.position[1] = self.position[1] + int(distance(0.5, frameTime))
+            elif self.position[1] + int(distance(0.5, frameTime)) > self.nextPosition[1]:
+                self.position[1] = self.nextPosition[1]
+        if self.direction == 3:
+            if self.position[0] + int(distance(0.5, frameTime)) < self.nextPosition[0]:
+                self.position[0] = self.position[0] + int(distance(0.5, frameTime))
+            elif self.position[0] + int(distance(0.5, frameTime)) > self.nextPosition[0]:
+                self.position[0] = self.nextPosition[0]
+            
         if self.position[1] == self.nextPosition[1] and self.position[0] == self.nextPosition[0]:
             self.animationRunning = False
     
