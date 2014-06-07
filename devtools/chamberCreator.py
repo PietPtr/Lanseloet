@@ -12,7 +12,10 @@ import pygame, sys, os, random
 from pygame.locals import *
 
 whatChamber = raw_input("What picture do you want to load? ")
-whatChamber = whatChamber + ".png"
+if whatChamber == "":
+    whatChamber = "default.png"
+else:
+    whatChamber = whatChamber + ".png"
 
 # --- Functions ---
 def distance(speed, time):

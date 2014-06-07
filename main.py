@@ -276,7 +276,8 @@ class Character(object):
         self.currentChamber = currentChamber
         self.triggerTile = triggerTile
         self.commandList = commandList
-        self.nextPosition = [self.position[0], self.position[1]]
+        self.nextPosition = [self.position[0] - (self.position[0] % 64), self.position[1] - (self.position[1] % 64)]
+        print self.position[1], self.position[1] - (self.position[1] % 64)
         self.animationRunning = False
         self.warped = False
         self.lastCmdTime = 0
@@ -296,30 +297,34 @@ class Character(object):
         self.warped = False
         
     def updateAnimation(self):
-        self.animationUpdater(0)
-        self.animationUpdater(1)
-        
-    def animationUpdater(self, onetwo):
         if self.direction == 0:
-            if self.position[1] - int(distance(0.5, frameTime)) > self.nextPosition[1]:
-                self.position[1] = self.position[1] - int(distance(0.5, frameTime))
-            elif self.position[1] - int(distance(0.5, frameTime)) < self.nextPosition[1]:
+            if self.position[1] - distance(0.5, frameTime) > self.nextPosition[1]:
+                self.position[1] = self.position[1] - distance(0.5, frameTime)
+            elif self.position[1] - distance(0.5, frameTime) < self.nextPosition[1]:
                 self.position[1] = self.nextPosition[1]
+                self.animationRunning = False
+            self.animationRunning = True
         if self.direction == 1:
-            if self.position[0] - int(distance(0.5, frameTime)) > self.nextPosition[0]:
-                self.position[0] = self.position[0] - int(distance(0.5, frameTime))
-            elif self.position[0] - int(distance(0.5, frameTime)) < self.nextPosition[0]:
+            if self.position[0] - distance(0.5, frameTime) > self.nextPosition[0]:
+                self.position[0] = self.position[0] - distance(0.5, frameTime)
+            elif self.position[0] - distance(0.5, frameTime) < self.nextPosition[0]:
                 self.position[0] = self.nextPosition[0]
+                self.animationRunning = False
+            self.animationRunning = True
         if self.direction == 2:
-            if self.position[1] + int(distance(0.5, frameTime)) < self.nextPosition[1]:
-                self.position[1] = self.position[1] + int(distance(0.5, frameTime))
-            elif self.position[1] + int(distance(0.5, frameTime)) > self.nextPosition[1]:
+            if self.position[1] + distance(0.5, frameTime) < self.nextPosition[1]:
+                self.position[1] = self.position[1] + distance(0.5, frameTime)
+            elif self.position[1] + distance(0.5, frameTime) > self.nextPosition[1]:
                 self.position[1] = self.nextPosition[1]
+                self.animationRunning = False
+            self.animationRunning = True
         if self.direction == 3:
-            if self.position[0] + int(distance(0.5, frameTime)) < self.nextPosition[0]:
-                self.position[0] = self.position[0] + int(distance(0.5, frameTime))
-            elif self.position[0] + int(distance(0.5, frameTime)) > self.nextPosition[0]:
+            if self.position[0] + distance(0.5, frameTime) < self.nextPosition[0]:
+                self.position[0] = self.position[0] + distance(0.5, frameTime)
+            elif self.position[0] + distance(0.5, frameTime) > self.nextPosition[0]:
                 self.position[0] = self.nextPosition[0]
+                self.animationRunning = False
+            self.animationRunning = True
             
         if self.position[1] == self.nextPosition[1] and self.position[0] == self.nextPosition[0]:
             self.animationRunning = False
@@ -798,13 +803,13 @@ while True:
 
         # --- Movement ---
         if playerLocked == False:
-            if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100:
+            if pygame.key.get_pressed()[119] and pygame.time.get_ticks() - lastPress >= 100 and playerChar.animationRunning == False:
                 playerChar.move(0)
-            elif pygame.key.get_pressed()[97] and pygame.time.get_ticks() - lastPress >= 100:
+            elif pygame.key.get_pressed()[97] and pygame.time.get_ticks() - lastPress >= 100 and playerChar.animationRunning == False:
                 playerChar.move(1)
-            elif pygame.key.get_pressed()[115] and pygame.time.get_ticks() - lastPress >= 100:
+            elif pygame.key.get_pressed()[115] and pygame.time.get_ticks() - lastPress >= 100 and playerChar.animationRunning == False:
                 playerChar.move(2)
-            elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 100:
+            elif pygame.key.get_pressed()[100] and pygame.time.get_ticks() - lastPress >= 100 and playerChar.animationRunning == False:
                 playerChar.move(3)
             if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 100:
                 lastPress = pygame.time.get_ticks()
@@ -864,8 +869,8 @@ while True:
         elif pygame.key.get_pressed()[115]:
             playerY = playerY + distance(speed / 1.6, frameTime)
 
-        if playerY <= 64:
-            playerY = 64
+        if playerY <= 0:
+            playerY = 0
         elif playerY >= 640:
             playerY = 640
 
@@ -927,7 +932,7 @@ while True:
         try:
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Lives: " + str(endGameBoosts[2]) + ", Acceleration: " + str(endGameBoosts[3])
             #debug = "Max Speed: " + str(endGameBoosts[0]) + ", Starting Speed: " + str(endGameBoosts[1]) + ", Acceleration: " + str(endGameBoosts[3]) + ", Speed: " + str(speed)
-            debug = playerChar.nextPosition[0] / 64, playerChar.nextPosition[1] / 64, chamberList.index(playerChar.currentChamber), int(1000 / frameTime)
+            debug = playerChar.nextPosition[0] / 64, playerChar.position[0] / 64, playerChar.nextPosition[1] / 64, playerChar.position[1] / 64, chamberList.index(playerChar.currentChamber), int(1000 / frameTime)
         except NameError:
             debug = "Undefined"
         debugText = basicFont.render(str(debug), True, RED) #text | antialiasing | color
