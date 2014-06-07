@@ -277,7 +277,6 @@ class Character(object):
         self.triggerTile = triggerTile
         self.commandList = commandList
         self.nextPosition = [self.position[0] - (self.position[0] % 64), self.position[1] - (self.position[1] % 64)]
-        print self.position[1], self.position[1] - (self.position[1] % 64)
         self.animationRunning = False
         self.warped = False
         self.lastCmdTime = 0
@@ -387,7 +386,6 @@ class Character(object):
 
         for warp in self.currentChamber.warps:
             if [self.nextPosition[0] / 64, self.nextPosition[1] / 64] == warp.position and self.warped == False:
-                print warp.destinationChamber
                 self.currentChamber = chamberList[warp.destinationChamber]
                 self.nextPosition[0] = warp.destinationPos[0] * 64
                 self.nextPosition[1] = warp.destinationPos[1] * 64
@@ -961,6 +959,3 @@ while True:
             elif os.path.exists("screenshot" + str(x) + ".png") == False:
                 pygame.image.save(windowSurface, "screenshot" + str(x) + ".png")
                 break
-
-    for i in range(0, 10):
-        pass#print "lagg"
