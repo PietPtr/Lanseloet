@@ -1,0 +1,3 @@
+pic|chamber4.png
+warp|2|0|2|11|3
+warp|3|0|3|11|3
