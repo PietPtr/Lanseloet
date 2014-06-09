@@ -3,7 +3,7 @@ Codes for tiles:
 0: Important tile like floor/wall
 1: Furniture
 2: Stuff on the wall (Window, torch)
-3: 
+3: Garden tiles
 4: 
 5: Carpet
 6: Paintings
