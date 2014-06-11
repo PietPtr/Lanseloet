@@ -95,7 +95,16 @@ def startRunning():
     lives = endGameBoosts[2]
     speed = endGameBoosts[1]
     speedUp = endGameBoosts[3]
-    
+
+def playMonologue1():
+    global monologue1
+    if pygame.mixer.get_busy() == 0 and monologue1 != []:
+        print True
+        pygame.mixer.music.set_volume(0.5)
+        monologue1[0].play()
+    elif pygame.mixer.get_busy() != 0:
+        pygame.mixer.music.set_volume(1.0)
+
 """font"""
 def loadFont():
     global alphabetPictures
@@ -650,19 +659,26 @@ pauseBg = pygame.image.load('resources/pause.png')
 
 lifePic = pygame.image.load('resources/life.png')
 
+endGameBg = pygame.image.load("resources/endgame/default.png")
+
 soundList = []
 for i in range(0, 999):
     soundList.append(None)
 
 pygame.mixer.music.load('sounds/MENU.wav')
-
 pygame.mixer.music.play(-1, 0.0)
 
 path = os.path.abspath("sounds/voices")
 for voice in os.listdir(path):
     soundList[int(voice[0] + voice[1] + voice[2])] = pygame.mixer.Sound('sounds/voices/' + voice)
 
-endGameBg = pygame.image.load("resources/endgame/default.png")
+monologue1 = []
+
+path = os.path.abspath("sounds/monologues/first")
+for sentence in os.listdir(path):
+    monologue1.append(pygame.mixer.Sound("sounds/monologues/first" + sentence))
+
+print monologue1                        
 
 blockadeList = []
 mapSlices = []
@@ -811,6 +827,9 @@ while True:
                 playerChar.move(3)
             if (pygame.key.get_pressed()[119] or pygame.key.get_pressed()[97] or pygame.key.get_pressed()[115] or pygame.key.get_pressed()[100]) and pygame.time.get_ticks() - lastPress >= 100:
                 lastPress = pygame.time.get_ticks()
+
+        # --- Monologues ---
+        playMonologue1()
 
         # --- Tile visualisation ---
         if grid == True:
